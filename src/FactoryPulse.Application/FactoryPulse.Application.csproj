@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../FactoryPulse.Domain/FactoryPulse.Domain.csproj" />
+  </ItemGroup>
+</Project>

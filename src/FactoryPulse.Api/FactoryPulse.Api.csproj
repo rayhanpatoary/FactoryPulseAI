@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <UserSecretsId>FactoryPulseAI-FactoryPulse.Api</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <ProjectReference Include="../FactoryPulse.Application/FactoryPulse.Application.csproj" />
+    <ProjectReference Include="../FactoryPulse.Infrastructure/FactoryPulse.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
