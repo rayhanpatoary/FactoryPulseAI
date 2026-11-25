@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FactoryPulse.Infrastructure.Persistence;
 
-public sealed class AlarmManagement(FactoryPulseDbContext database) : IAlarmManagement
+public sealed class AlarmManagement(FactoryPulseDbContext database, TimeProvider clock) : IAlarmManagement
 {
     private static readonly Expression<Func<MachineAlarm, AlarmDetails>> Project =
         alarm => new AlarmDetails(alarm.Id, alarm.MachineId, alarm.AlarmCode, alarm.Message, alarm.Severity,
@@ -53,5 +53,16 @@ public sealed class AlarmManagement(FactoryPulseDbContext database) : IAlarmMana
         }
 
         return new AlarmPage(filter.Page, filter.PageSize, hasMore, items);
+    }
+
+    public async Task<AlarmDetails?> AcknowledgeAsync(long id, CancellationToken cancellationToken)
+    {
+        DateTime utcNow = clock.GetUtcNow().UtcDateTime;
+        await database.MachineAlarms.Where(alarm => alarm.Id == id && alarm.AcknowledgedAtUtc == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(alarm => alarm.AcknowledgedAtUtc,
+                alarm => (DateTime?)(alarm.CreatedAtUtc > utcNow ? alarm.CreatedAtUtc : utcNow)), cancellationToken);
+
+        return await database.MachineAlarms.AsNoTracking().Where(alarm => alarm.Id == id)
+            .Select(Project).SingleOrDefaultAsync(cancellationToken);
     }
 }
