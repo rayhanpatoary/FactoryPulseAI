@@ -1,3 +1,4 @@
+using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ internal static class DatabaseRegistration
             options.UseSqlite(connection.ToString());
         });
         builder.Services.AddScoped<MachineHistoryQueries>();
+        builder.Services.AddScoped<IMachineQueries, MachineQueries>();
     }
 
     private static bool IsDatabaseFilePath(string path)

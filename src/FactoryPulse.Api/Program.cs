@@ -1,11 +1,14 @@
+using System.Text.Json.Serialization;
 using FactoryPulse.Api.Persistence;
 using FactoryPulse.Api.Simulation;
 using FactoryPulse.Application.Status;
+using FactoryPulse.Domain.Monitoring;
 using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<MachineStatus>(allowIntegerValues: false)));
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
