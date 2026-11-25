@@ -18,6 +18,15 @@ FactoryPulse AI is a portfolio project for the German software engineering marke
 - Keep resource use predictable. Bound queues when introduced, use configurable sampling, and add pagination and indexes with data access. Use structured logs and health checks. Measure before adding caching or concurrency and support published performance claims with reproducible results.
 - Use xUnit for behavior tests and WebApplicationFactory for API integration. Keep tests deterministic and independent. Use Coverlet for .NET coverage. Add Moq or Testcontainers when a concrete test benefits. Use Vitest and Playwright for Angular and evaluate FlaUI with WPF. Run analyzers and `dotnet format` for .NET changes. Add ESLint and Prettier with Angular and Ruff if Python is introduced.
 
+## Git Workflow and Atomic Commit Policy
+
+- Commit each verified, logically complete change throughout every stage and technology. Aim for roughly 80–100 changed handwritten lines per commit and commit smaller finished changes promptly. Keep necessary multi-file changes and generated migrations together.
+- Use descriptive English Conventional Commit messages. Stage explicit paths or selected hunks. Preserve unrelated user changes and staged work.
+- Build and run relevant automated tests before each commit. Investigate failures and report unresolved blockers. Keep broken changes out of commits.
+- Inspect both `git diff --cached` and `git diff --cached --stat` before committing. Exclude secrets, databases and sidecar files, machine-local settings, build outputs, and temporary files.
+- Preserve history. Avoid squashing, amending, rewriting history, force-pushing, unnecessary merge commits, and automatic pushes.
+- Continue through the authorized stage after each commit. Report the short hash and subject of each new commit at handoff.
+
 ## Workflow and definition of done
 
 1. Read the current requirements, architecture, and relevant ADRs. Inspect the existing implementation and preserve unrelated changes.
