@@ -10,6 +10,7 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 
 - **Status API.** ASP.NET Core exposes process liveness and application status, with an OpenAPI document in Development.
 - **Machine data model.** Domain rules validate machines, timestamped readings, and alarms. Alarm acknowledgement preserves the first acknowledgement time.
+- **Simulated acquisition.** An opt-in simulator generates repeatable telemetry for three CNC profiles and writes the latest readings to SQLite in batches.
 - **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations. Internal queries return bounded pages of readings and open alarms. The HTTP API currently exposes the status endpoints listed below.
 
 ## Architecture and technology
@@ -23,7 +24,7 @@ The solution is a modular monolith on .NET 10. Its four production projects keep
 | `FactoryPulse.Infrastructure` | EF Core 10 and SQLite mappings, migrations, and history queries |
 | `FactoryPulse.Api` | ASP.NET Core endpoints, configuration, dependency injection, and OpenAPI |
 
-The current backend reports simulation mode. The roadmap adds simulated data acquisition and extensible data-source adapters. The module boundaries also support future web and desktop clients and allow analytics services to be deployed separately when a workload requires it. [System architecture](docs/architecture/ARCHITECTURE.md)
+The simulator implements the application's machine data-source contract. The module boundaries support future data-source adapters, web and desktop clients, and the later extraction of analytics services. [System architecture](docs/architecture/ARCHITECTURE.md)
 
 ## Getting started
 
@@ -58,6 +59,8 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 
 ASP.NET Core loads defaults from `appsettings.json` and validates typed settings at startup. Override `Database__Path` to select a writable SQLite file, `ApplicationStatus__InstanceName` to name the instance, and `AllowedHosts` to configure accepted host names. Use .NET User Secrets for development credentials and protected environment variables or a secret provider for deployments. Keep credentials out of version control.
 
+After applying the database migration, set `Simulation__Enabled=true` before starting the API to record simulated readings. [Simulator setup and settings](docs/architecture/SIMULATION.md)
+
 ## Testing and quality assurance
 
 xUnit tests exercise domain rules, the HTTP pipeline through WebApplicationFactory, and migrations and queries against isolated SQLite databases. Microsoft.Testing.Platform runs the suite, and Coverlet collects coverage. Central package version management, nullable reference types, .NET analyzers, and `dotnet format` support consistent builds. [Engineering requirements](docs/REQUIREMENTS.md)
@@ -73,12 +76,13 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | --- | --- |
 | Application status, liveness, and Development OpenAPI | Implemented |
 | Machine, reading, and alarm models and SQLite persistence | Implemented |
-| End-to-end machine monitoring | In progress. Models and history queries exist. Acquisition, streaming, and monitoring interfaces are planned. |
+| Simulated machine telemetry and batch storage | Implemented |
+| End-to-end machine monitoring | In progress. Simulated acquisition and history queries exist. Streaming and monitoring interfaces are planned. |
 | Quality inspection, predictive analytics, and deployment automation | Planned |
 
 ## Roadmap
 
-- **Telemetry and diagnostics.** Add a machine simulator and real-time telemetry with SignalR. Evaluate OPC UA for read-only data acquisition and support additional sources through plugins.
+- **Telemetry and diagnostics.** Deliver live telemetry with SignalR. Evaluate OPC UA for read-only data acquisition and support additional sources through plugins.
 - **Operator interfaces.** Build an Angular web interface and a WPF desktop client for machine status, trends, and alarms.
 - **Inspection and analytics.** Add camera-based quality inspection with OpenCV and evaluate predictive maintenance with ML.NET.
 - **Deployment and operations.** Add Docker and Docker Compose, automate verification with GitHub Actions, and evaluate Kubernetes for orchestration.

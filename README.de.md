@@ -10,6 +10,7 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 
 - **Status-API.** ASP.NET Core stellt Endpunkte für die Erreichbarkeit des API-Prozesses und den Anwendungsstatus bereit. In der Entwicklungsumgebung steht ein OpenAPI-Dokument zur Verfügung.
 - **Maschinendatenmodell.** Fachliche Regeln prüfen Maschinen, Messwerte mit Zeitstempel und Alarme. Bei der Alarmquittierung bleibt der Zeitpunkt der ersten Quittierung erhalten.
+- **Simulierte Datenerfassung.** Ein zuschaltbarer Simulator erzeugt reproduzierbare Telemetrie für drei CNC-Profile und speichert die jeweils neuesten Messwerte gesammelt in SQLite.
 - **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen. Interne Abfragen liefern seitenweise Messwerte und offene Alarme. Die HTTP-API stellt derzeit die unten aufgeführten Statusendpunkte bereit.
 
 ## Softwarearchitektur und Technologien
@@ -23,7 +24,7 @@ Die Lösung ist ein modularer Monolith auf Basis von .NET 10. Vier Anwendungspro
 | `FactoryPulse.Infrastructure` | SQLite-Mappings mit EF Core 10, Migrationen und Verlaufsabfragen |
 | `FactoryPulse.Api` | ASP.NET Core, HTTP-Endpunkte, Konfiguration, Dependency Injection und OpenAPI |
 
-Das Backend meldet derzeit den Simulationsmodus. Die Roadmap sieht eine simulierte Datenerfassung und erweiterbare Datenquellenadapter vor. Die Modulgrenzen unterstützen künftige Web- und Desktop-Clients und erlauben bei entsprechendem Bedarf die separate Bereitstellung von Analysediensten. [Systemarchitektur](docs/architecture/ARCHITECTURE.md)
+Der Simulator implementiert die Schnittstelle zur Maschinendatenerfassung. Die Modulgrenzen unterstützen künftige Datenquellenadapter, Web- und Desktop-Clients sowie eine spätere Auslagerung von Analysediensten. [Systemarchitektur](docs/architecture/ARCHITECTURE.md)
 
 ## Lokal einrichten und starten
 
@@ -58,6 +59,8 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 
 ASP.NET Core lädt Standardwerte aus `appsettings.json` und validiert typisierte Einstellungen beim Start. Mit `Database__Path` wählen Sie eine beschreibbare SQLite-Datei, mit `ApplicationStatus__InstanceName` den Instanznamen und mit `AllowedHosts` die zulässigen Hostnamen. Verwenden Sie für Zugangsdaten in der Entwicklung .NET User Secrets und bei der Bereitstellung geschützte Umgebungsvariablen oder einen Secret-Provider. Zugangsdaten gehören nicht in die Versionsverwaltung.
 
+Führen Sie die Datenbankmigration aus und setzen Sie vor dem API-Start `Simulation__Enabled=true`, um simulierte Messwerte zu speichern. [Simulatoreinrichtung und Einstellungen](docs/architecture/SIMULATION.md)
+
 ## Automatisierte Tests und Qualitätssicherung
 
 Die xUnit-Tests prüfen Fachregeln, die HTTP-Pipeline mit WebApplicationFactory sowie Migrationen und Abfragen mit isolierten SQLite-Datenbanken. Die Tests laufen auf Microsoft.Testing.Platform. Coverlet erfasst die Testabdeckung. Zentrale Paketversionierung, Nullable Reference Types, .NET-Analyzer und `dotnet format` sorgen für einheitliche Build-Prüfungen. [Technische Anforderungen](docs/REQUIREMENTS.md)
@@ -73,12 +76,13 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | --- | --- |
 | Anwendungsstatus, Prüfung des API-Prozesses und OpenAPI in der Entwicklungsumgebung | Implementiert |
 | Modelle für Maschinen, Messwerte und Alarme sowie SQLite-Persistenz | Implementiert |
-| Durchgängige Maschinenüberwachung | In Arbeit. Modelle und Verlaufsabfragen sind vorhanden. Datenerfassung, Live-Übertragung und Bedienoberflächen sind geplant. |
+| Simulierte Maschinentelemetrie und gebündelte Speicherung | Implementiert |
+| Durchgängige Maschinenüberwachung | In Arbeit. Simulierte Datenerfassung und Verlaufsabfragen sind vorhanden. Live-Übertragung und Bedienoberflächen sind geplant. |
 | Qualitätsprüfung, vorausschauende Analysen und automatisierte Bereitstellung | Geplant |
 
 ## Roadmap
 
-- **Telemetrie und Diagnose.** Einen Maschinensimulator und Echtzeittelemetrie mit SignalR ergänzen. OPC UA für die lesende Datenerfassung prüfen und weitere Datenquellen über Plugins anbinden.
+- **Telemetrie und Diagnose.** Live-Telemetrie mit SignalR bereitstellen. OPC UA für den lesenden Zugriff prüfen und weitere Datenquellen über Plugins anbinden.
 - **Bedienoberflächen.** Eine Angular-Weboberfläche und einen WPF-Desktop-Client für Maschinenzustände, Trends und Alarme entwickeln.
 - **Qualitätsprüfung und Analysen.** Kamerabasierte Qualitätsprüfung mit OpenCV ergänzen und vorausschauende Wartung mit ML.NET evaluieren.
 - **Bereitstellung und Betrieb.** Docker und Docker Compose ergänzen, Prüfungen mit GitHub Actions automatisieren und Kubernetes für die Orchestrierung evaluieren.
