@@ -11,7 +11,8 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 - **Status-API.** ASP.NET Core stellt Endpunkte für die Erreichbarkeit des API-Prozesses und den Anwendungsstatus bereit. In der Entwicklungsumgebung steht ein OpenAPI-Dokument zur Verfügung.
 - **Maschinendatenmodell.** Fachliche Regeln prüfen Maschinen, Messwerte mit Zeitstempel und Alarme. Bei der Alarmquittierung bleibt der Zeitpunkt der ersten Quittierung erhalten.
 - **Simulierte Datenerfassung.** Ein zuschaltbarer Simulator erzeugt reproduzierbare Telemetrie für drei CNC-Profile und speichert die jeweils neuesten Messwerte gesammelt in SQLite.
-- **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen. Interne Abfragen liefern seitenweise Messwerte und offene Alarme. Die HTTP-API stellt derzeit die unten aufgeführten Statusendpunkte bereit.
+- **API für die Maschinenüberwachung.** Maschinenbestand, Anzahl je Status, aktuelle Messwerte und den paginierten Messwertverlauf mit UTC-Zeitfiltern abrufen. [Endpunkte und Beispiele](docs/architecture/MONITORING-API.md)
+- **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen.
 
 ## Softwarearchitektur und Technologien
 
@@ -77,7 +78,8 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Anwendungsstatus, Prüfung des API-Prozesses und OpenAPI in der Entwicklungsumgebung | Implementiert |
 | Modelle für Maschinen, Messwerte und Alarme sowie SQLite-Persistenz | Implementiert |
 | Simulierte Maschinentelemetrie und gebündelte Speicherung | Implementiert |
-| Durchgängige Maschinenüberwachung | In Arbeit. Simulierte Datenerfassung und Verlaufsabfragen sind vorhanden. Live-Übertragung und Bedienoberflächen sind geplant. |
+| Schreibgeschützte REST-API für Maschinenbestand, Statusübersicht und Messwerte | Implementiert |
+| Durchgängige Maschinenüberwachung | In Arbeit. Simulierte Datenerfassung und REST-Abfragen sind vorhanden. Live-Übertragung und Bedienoberflächen sind geplant. |
 | Qualitätsprüfung, vorausschauende Analysen und automatisierte Bereitstellung | Geplant |
 
 ## Roadmap

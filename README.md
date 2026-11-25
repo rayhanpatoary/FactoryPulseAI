@@ -11,7 +11,8 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 - **Status API.** ASP.NET Core exposes process liveness and application status, with an OpenAPI document in Development.
 - **Machine data model.** Domain rules validate machines, timestamped readings, and alarms. Alarm acknowledgement preserves the first acknowledgement time.
 - **Simulated acquisition.** An opt-in simulator generates repeatable telemetry for three CNC profiles and writes the latest readings to SQLite in batches.
-- **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations. Internal queries return bounded pages of readings and open alarms. The HTTP API currently exposes the status endpoints listed below.
+- **Machine monitoring API.** Read the machine catalog, status counts, latest readings, and paginated history with UTC date filters. [Endpoints and examples](docs/architecture/MONITORING-API.md)
+- **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations.
 
 ## Architecture and technology
 
@@ -77,7 +78,8 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Application status, liveness, and Development OpenAPI | Implemented |
 | Machine, reading, and alarm models and SQLite persistence | Implemented |
 | Simulated machine telemetry and batch storage | Implemented |
-| End-to-end machine monitoring | In progress. Simulated acquisition and history queries exist. Streaming and monitoring interfaces are planned. |
+| Read-only machine catalog, status summary, and telemetry API | Implemented |
+| End-to-end machine monitoring | In progress. Simulated acquisition and REST queries exist. Streaming and operator interfaces are planned. |
 | Quality inspection, predictive analytics, and deployment automation | Planned |
 
 ## Roadmap

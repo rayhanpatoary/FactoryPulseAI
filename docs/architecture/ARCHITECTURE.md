@@ -17,6 +17,8 @@ Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext
 
 `GET /api/status` enters `StatusController`, which delegates to `ApplicationStatusService`. The service returns the configured instance name, the fixed simulation mode, and UTC time from `TimeProvider`. API startup binds and validates `ApplicationStatus:InstanceName` and composes the use case. In deployments, the name can be overridden with `ApplicationStatus__InstanceName` and `AllowedHosts` can be set to the allowed hostnames.
 
+The monitoring controllers validate route and query inputs and call the Application interfaces `IMachineQueries` and `IMachineTelemetryQueries`. Infrastructure projects data from the same SQLite tables the simulator writes. Read-only EF Core queries execute asynchronously with request cancellation. History and latest-reading queries share machine filtering and ordering. Controllers return DTOs and use the existing ProblemDetails pipeline for errors. [HTTP contract and examples](MONITORING-API.md) · [Read API decision](../adr/0002-monitoring-read-api.md)
+
 `GET /health` uses ASP.NET Core health checks to report process liveness. Dependency readiness checks belong in a later stage when external dependencies exist. The host provides structured logging and a centralized exception handler with ProblemDetails. Development exposes OpenAPI and uses a loopback HTTPS launch profile. The integration suite runs under `Testing` with TestServer and requires no development certificate. Production inherits base settings and can receive protected settings at deployment time.
 
 ## Simulated acquisition
