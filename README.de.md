@@ -12,6 +12,7 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 - **Maschinendatenmodell.** Fachliche Regeln prüfen Maschinen, Messwerte mit Zeitstempel und Alarme. Bei der Alarmquittierung bleibt der Zeitpunkt der ersten Quittierung erhalten.
 - **Simulierte Datenerfassung.** Ein zuschaltbarer Simulator erzeugt reproduzierbare Telemetrie für drei CNC-Profile und speichert die jeweils neuesten Messwerte gesammelt in SQLite.
 - **API für die Maschinenüberwachung.** Maschinenbestand, Anzahl je Status, aktuelle Messwerte und den paginierten Messwertverlauf mit UTC-Zeitfiltern abrufen. [Endpunkte und Beispiele](docs/architecture/MONITORING-API.md)
+- **Alarmverwaltung.** Konfigurierbare Regeln für Temperatur und Schwingung erkennen auffällige Messwerte und beenden Alarme nach Rückkehr in den Normalbereich. Die REST-API liefert aktive Alarme und den Verlauf. [Alarmeinstellungen und Endpunkte](docs/architecture/ALARMS.md)
 - **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen.
 
 ## Softwarearchitektur und Technologien
@@ -62,6 +63,8 @@ ASP.NET Core lädt Standardwerte aus `appsettings.json` und validiert typisierte
 
 Führen Sie die Datenbankmigration aus und setzen Sie vor dem API-Start `Simulation__Enabled=true`, um simulierte Messwerte zu speichern. [Simulatoreinrichtung und Einstellungen](docs/architecture/SIMULATION.md)
 
+Unter `AlarmDetection` lassen sich Auslöse- und Rücksetzgrenzen einstellen. Die Alarmquittierung ist in den Umgebungen Development und Testing verfügbar. [Grenzwerte und Zugriffsbeschränkungen](docs/architecture/ALARMS.md)
+
 ## Automatisierte Tests und Qualitätssicherung
 
 Die xUnit-Tests prüfen Fachregeln, die HTTP-Pipeline mit WebApplicationFactory sowie Migrationen und Abfragen mit isolierten SQLite-Datenbanken. Die Tests laufen auf Microsoft.Testing.Platform. Coverlet erfasst die Testabdeckung. Zentrale Paketversionierung, Nullable Reference Types, .NET-Analyzer und `dotnet format` sorgen für einheitliche Build-Prüfungen. [Technische Anforderungen](docs/REQUIREMENTS.md)
@@ -79,6 +82,7 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Modelle für Maschinen, Messwerte und Alarme sowie SQLite-Persistenz | Implementiert |
 | Simulierte Maschinentelemetrie und gebündelte Speicherung | Implementiert |
 | Schreibgeschützte REST-API für Maschinenbestand, Statusübersicht und Messwerte | Implementiert |
+| Temperatur- und Schwingungsalarme, Alarmlebenszyklus und REST-Abfragen | Implementiert |
 | Durchgängige Maschinenüberwachung | In Arbeit. Simulierte Datenerfassung und REST-Abfragen sind vorhanden. Live-Übertragung und Bedienoberflächen sind geplant. |
 | Qualitätsprüfung, vorausschauende Analysen und automatisierte Bereitstellung | Geplant |
 

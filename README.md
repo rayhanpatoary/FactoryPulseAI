@@ -12,6 +12,7 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 - **Machine data model.** Domain rules validate machines, timestamped readings, and alarms. Alarm acknowledgement preserves the first acknowledgement time.
 - **Simulated acquisition.** An opt-in simulator generates repeatable telemetry for three CNC profiles and writes the latest readings to SQLite in batches.
 - **Machine monitoring API.** Read the machine catalog, status counts, latest readings, and paginated history with UTC date filters. [Endpoints and examples](docs/architecture/MONITORING-API.md)
+- **Alarm management.** Configurable temperature and vibration rules detect and resolve abnormal conditions. REST endpoints expose active alarms and history. [Alarm settings and endpoints](docs/architecture/ALARMS.md)
 - **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations.
 
 ## Architecture and technology
@@ -62,6 +63,8 @@ ASP.NET Core loads defaults from `appsettings.json` and validates typed settings
 
 After applying the database migration, set `Simulation__Enabled=true` before starting the API to record simulated readings. [Simulator setup and settings](docs/architecture/SIMULATION.md)
 
+The `AlarmDetection` settings control trigger and clear limits. Alarm acknowledgement is available in Development and Testing. [Thresholds and access restrictions](docs/architecture/ALARMS.md)
+
 ## Testing and quality assurance
 
 xUnit tests exercise domain rules, the HTTP pipeline through WebApplicationFactory, and migrations and queries against isolated SQLite databases. Microsoft.Testing.Platform runs the suite, and Coverlet collects coverage. Central package version management, nullable reference types, .NET analyzers, and `dotnet format` support consistent builds. [Engineering requirements](docs/REQUIREMENTS.md)
@@ -79,6 +82,7 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Machine, reading, and alarm models and SQLite persistence | Implemented |
 | Simulated machine telemetry and batch storage | Implemented |
 | Read-only machine catalog, status summary, and telemetry API | Implemented |
+| Temperature and vibration alarms, lifecycle, and REST queries | Implemented |
 | End-to-end machine monitoring | In progress. Simulated acquisition and REST queries exist. Streaming and operator interfaces are planned. |
 | Quality inspection, predictive analytics, and deployment automation | Planned |
 
