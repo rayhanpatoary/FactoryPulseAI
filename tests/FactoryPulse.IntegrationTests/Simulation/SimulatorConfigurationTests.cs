@@ -34,16 +34,18 @@ public sealed class SimulatorConfigurationTests(WebApplicationFactory<Program> f
         await execution.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
     }
 
-    [Fact]
-    public async Task StartupRejectsInvalidSimulationCadence()
+    [Theory]
+    [InlineData("Simulation:PersistenceInterval", "00:00:00", "sampling interval")]
+    [InlineData("AlarmDetection:TemperatureWarningClear", "85", "AlarmDetection thresholds")]
+    public async Task StartupRejectsInvalidMonitoringSettings(string key, string value, string expectedMessage)
     {
         await using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Testing")
             .ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Simulation:PersistenceInterval"] = "00:00:00"
+                [key] = value
             })));
 
         OptionsValidationException exception = Assert.Throws<OptionsValidationException>(() => host.CreateClient());
-        Assert.Contains("sampling interval", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(expectedMessage, exception.Message, StringComparison.Ordinal);
     }
 }

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using FactoryPulse.Api.Persistence;
 using FactoryPulse.Api.Simulation;
+using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Application.Status;
 using FactoryPulse.Domain.Monitoring;
 using Microsoft.Extensions.Options;
@@ -13,6 +14,13 @@ builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
 builder.AddFactoryPulseSimulation();
+
+builder.Services.AddOptions<AlarmDetectionOptions>()
+    .BindConfiguration(AlarmDetectionOptions.SectionName)
+    .Validate(settings => settings.HasValidThresholds(), "AlarmDetection thresholds must be finite and ordered, with clear limits below their triggers.")
+    .ValidateOnStart();
+builder.Services.AddSingleton(services =>
+    new AlarmDetectionService(services.GetRequiredService<IOptions<AlarmDetectionOptions>>().Value));
 
 if (builder.Environment.IsDevelopment())
 {

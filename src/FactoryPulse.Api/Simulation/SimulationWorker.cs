@@ -10,6 +10,7 @@ internal sealed partial class SimulationWorker(
     IOptions<SimulationOptions> options,
     IMachineDataSource source,
     IServiceScopeFactory scopeFactory,
+    TelemetryProcessor telemetry,
     TimeProvider clock,
     ILogger<SimulationWorker> logger) : BackgroundService
 {
@@ -31,6 +32,7 @@ internal sealed partial class SimulationWorker(
                     .InitializeAsync(settings.Profiles, clock.GetUtcNow().UtcDateTime, stoppingToken);
             }
 
+            await telemetry.InitializeAsync([.. machines.Select(machine => machine.Id)], stoppingToken);
             LogInitialized(logger, machines.Length);
             long lastPersistedAt = clock.GetTimestamp();
             using var timer = new PeriodicTimer(settings.SamplingInterval, clock);
@@ -46,16 +48,12 @@ internal sealed partial class SimulationWorker(
                     latestReadings[index] = await source.ReadAsync(machines[index], stoppingToken);
                 }
 
-                if (clock.GetElapsedTime(lastPersistedAt, sampledAt) < settings.PersistenceInterval)
+                operation = "telemetry evaluation and persistence";
+                bool persistenceDue = clock.GetElapsedTime(lastPersistedAt, sampledAt) >= settings.PersistenceInterval;
+                if (await telemetry.ProcessAsync(latestReadings, persistenceDue, stoppingToken))
                 {
-                    continue;
+                    lastPersistedAt = sampledAt;
                 }
-
-                operation = "telemetry persistence";
-                await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-                await scope.ServiceProvider.GetRequiredService<TelemetryStore>()
-                    .SaveBatchAsync(latestReadings, [], [], stoppingToken);
-                lastPersistedAt = sampledAt;
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)

@@ -35,5 +35,4 @@ public sealed class SimulationStore(FactoryPulseDbContext database)
         await database.SaveChangesAsync(cancellationToken);
         return machines;
     }
-
 }
