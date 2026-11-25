@@ -23,6 +23,7 @@ internal static class DatabaseRegistration
             var connection = new SqliteConnectionStringBuilder { DataSource = databasePath, ForeignKeys = true };
             options.UseSqlite(connection.ToString());
         });
+        builder.Services.AddScoped<MachineHistoryQueries>();
     }
 
     private static bool IsDatabaseFilePath(string path)
