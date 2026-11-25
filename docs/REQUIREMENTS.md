@@ -1,21 +1,19 @@
-# Requirements
+# Product and engineering requirements
 
-FactoryPulse AI demonstrates industrial software engineering through a lightweight, bilingual simulation of machine monitoring, quality inspection, and predictive maintenance. The application must never control real equipment.
+FactoryPulse AI is designed to bring machine readings, operating states, and alarms together for industrial condition monitoring and fault diagnosis. Industrial software engineers, maintenance engineers, equipment operators, and quality teams are the intended users. Current development operates within a simulation boundary. Future acquisition adapters may read equipment data. The platform must never control real equipment.
 
-## Day 1, Stage 1 acceptance criteria
+## Platform requirements
 
-- Provide a Visual Studio solution with four .NET 10 production projects and two xUnit projects. Follow the dependency rules in the [architecture](architecture/ARCHITECTURE.md).
-- Use centralized stable NuGet versions, a stable SDK selection policy, nullable references, analyzers, and consistent formatting.
-- Expose process liveness at `GET /health` and application status at `GET /api/status`. Use controller routing for the application endpoint.
-- Supply development HTTPS and OpenAPI, built-in structured logging, centralized ProblemDetails handling, typed configuration with startup validation, and local User Secrets support.
-- Include a meaningful application test, an API liveness test through WebApplicationFactory, and reproducible restore, build, test, and format checks.
-- Add English and German project overviews, persistent development instructions, architecture documentation, and the initial decision record.
+- Use a modular .NET 10 solution with independent domain rules, application use cases, external adapters, and an ASP.NET Core composition root. [Architecture and project dependencies](architecture/ARCHITECTURE.md)
+- Expose API process liveness at `GET /health` and application status at `GET /api/status`. Provide local development HTTPS, OpenAPI in Development, structured logging, centralized ProblemDetails handling, and typed configuration validation.
+- Store machines, readings, and alarms with validated domain values, UTC timestamps, referential integrity, and bounded history queries. Apply database migrations explicitly and keep local database files out of version control. [Database design](architecture/DATABASE.md)
+- Pin a stable SDK and manage stable NuGet versions centrally. Enable nullable reference types, analyzers, and source formatting. Provide reproducible build and test commands and verify the HTTP pipeline and relational behavior with integration tests.
+- Keep credentials outside source control. Provide English and German public documentation and plan localization for future operator interfaces.
 
-## Release roadmap
+## Requirements for future capabilities
 
-| Release | Planned scope |
-| --- | --- |
-| 1.0, first three days | ASP.NET Core, Angular, an industrial machine simulator, EF Core and SQLite, REST and SignalR, live monitoring, alarms and history, English and German switching, automated tests, Docker Compose, and GitHub Actions CI/CD. |
-| 2.0, following four days | WPF with MVVM and MEF plugins, machine and camera adapters, CSV replay, OpenCV, an independent vision service when justified, ML.NET predictive maintenance, Kubernetes demonstration, benchmarks, and expanded tests. OPC UA and ONNX are feasibility-dependent. |
+- Bound resource use in acquisition and monitoring workflows. Validate any published performance figures with reproducible measurements.
+- Keep data source integrations behind adapter boundaries and retain read-only behavior for equipment connections.
+- Evaluate standalone analytics services when independent deployment or scaling solves a demonstrated need.
 
-Future features should retain the simulation boundary, use bounded resources where applicable, and substantiate performance claims with repeatable measurements.
+The [product overview](../README.md) records implementation status and roadmap priorities.
