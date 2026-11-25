@@ -2,11 +2,21 @@
 
 ## Product and release strategy
 
-FactoryPulse AI is a portfolio project for the German software engineering market. It demonstrates .NET, industrial software, and full-stack development through simulated machine monitoring, quality inspection, and predictive maintenance. The platform must operate in simulation and must never control real equipment.
+FactoryPulse AI is a modular industrial platform designed for machine monitoring, operational diagnostics, intelligent quality inspection, and manufacturing analytics. Current development operates within a simulation boundary. The platform must never control real equipment.
 
-- Version 1.0 is planned for the first three development days. It covers the ASP.NET Core API, Angular web client, C# simulator, EF Core with SQLite, REST and SignalR, monitoring, alarms, history, localization, tests, Docker Compose, and GitHub Actions.
-- Version 2.0 is planned for the following four development days. It may add WPF, CommunityToolkit.Mvvm, System.Composition, plugins, CSV replay, camera and OpenCV integrations, predictive maintenance, benchmarking, and a Kubernetes demonstration. OPC UA, ONNX inference, and service extraction depend on feasibility and an explicit scope decision.
+- The Version 1.0 scope covers the ASP.NET Core API, Angular web client, C# simulator, EF Core with SQLite, REST and SignalR, monitoring, alarms, history, localization, tests, Docker Compose, and GitHub Actions.
+- The Version 2.0 scope may add WPF, CommunityToolkit.Mvvm, System.Composition, plugins, CSV replay, camera and OpenCV integrations, predictive maintenance, benchmarking, and a Kubernetes demonstration. OPC UA, ONNX inference, and service extraction depend on feasibility and an explicit scope decision.
 - Deliver only the current authorized stage. Later release items are roadmap work.
+
+## Product Documentation and Professional Communication Standards
+
+- Present FactoryPulse AI as an industrial software product. Describe the problems it addresses, intended users, architecture, and verified capabilities. Keep portfolio, student, tutorial, and job-search framing out of public documentation.
+- Keep internal schedules, prompts, and implementation notes outside public-facing product descriptions. Distinguish the product vision, implemented functionality, and the roadmap. Use evidence from the repository to assign implementation status.
+- Use precise technical language. Avoid repetitive promotion, buzzwords, decorative emojis, and claims such as “enterprise-grade” without evidence. Verify claims about functionality, metrics, certifications, deployments, readiness, and code origin or authorship before publishing them.
+- Check capability claims against source code and automated tests. Recheck the public documentation when functionality changes and keep build, test, and run instructions synchronized with the repository.
+- Maintain factually equivalent, idiomatic English and German READMEs with consistent technical terminology, naming, and formatting. Keep the READMEs concise and oriented toward readers who are new to the product.
+- Record detailed design and trade-offs under `docs/architecture` and architecture decisions under `docs/adr`. Explain the rationale when it helps maintainers and favor simple, maintainable solutions.
+- Review documentation diffs, Markdown formatting, relative links, and language parity before committing. Commit by documentation topic and follow the permanent atomic commit policy.
 
 ## Mandatory engineering rules
 
