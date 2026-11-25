@@ -25,8 +25,11 @@ internal static class DatabaseRegistration
             options.UseSqlite(connection.ToString());
         });
         builder.Services.AddScoped<MachineHistoryQueries>();
+        builder.Services.AddScoped<TelemetryStore>();
+        builder.Services.AddTransient<TelemetryProcessor>();
         builder.Services.AddScoped<IMachineTelemetryQueries>(services => services.GetRequiredService<MachineHistoryQueries>());
         builder.Services.AddScoped<IMachineQueries, MachineQueries>();
+        builder.Services.AddScoped<IAlarmManagement, AlarmManagement>();
     }
 
     private static bool IsDatabaseFilePath(string path)

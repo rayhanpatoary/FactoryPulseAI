@@ -28,8 +28,8 @@ public sealed class SimulationStoreTests
         await using FactoryPulseDbContext restarted = database.CreateContext();
         var store = new SimulationStore(restarted);
         Machine[] machines = await store.InitializeAsync([reused, created], now, token);
-        await store.SaveReadingsAsync(
-            [new MachineReading(machines[0].Id, now.AddSeconds(1), 25, 1, 1400, 15, 0.01)], token);
+        await new TelemetryStore(restarted).SaveBatchAsync(
+            [new MachineReading(machines[0].Id, now.AddSeconds(1), 25, 1, 1400, 15, 0.01)], [], [], token);
 
         Assert.Equal(2, await restarted.Machines.CountAsync(token));
         Assert.Equal(existing.Id, machines[0].Id);

@@ -1,3 +1,4 @@
+using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Domain.Monitoring;
 using FactoryPulse.Infrastructure.Persistence;
 using FactoryPulse.IntegrationTests.Persistence;
@@ -22,6 +23,8 @@ public sealed class MachineApiFixture : IAsyncLifetime
     private SqliteTestDatabase? database;
 
     internal HttpClient Client { get; private set; } = null!;
+    internal long WarningAlarmId { get; private set; }
+    internal long ResolvedAlarmId { get; private set; }
 
     public async ValueTask InitializeAsync()
     {
@@ -38,6 +41,12 @@ public sealed class MachineApiFixture : IAsyncLifetime
             var idle = new Machine(IdleId, "CNC-003", "Mill C", "CNC", "Line B", StartUtc);
             idle.ChangeStatus(MachineStatus.Idle, StartUtc);
             writer.Machines.AddRange(idle, running, other);
+            var warning = new MachineAlarm(RunningId, AlarmCodes.TemperatureWarning, "Temperature warning", AlarmSeverity.Warning, StartUtc.AddMinutes(1));
+            var resolved = new MachineAlarm(RunningId, AlarmCodes.TemperatureCritical, "Critical temperature", AlarmSeverity.Critical, StartUtc.AddMinutes(2));
+            resolved.Resolve(StartUtc.AddMinutes(3));
+            var vibration = new MachineAlarm(OtherId, AlarmCodes.VibrationWarning, "Vibration warning", AlarmSeverity.Warning, StartUtc.AddMinutes(4));
+            vibration.Acknowledge(StartUtc.AddMinutes(5));
+            writer.MachineAlarms.AddRange(warning, resolved, vibration);
             writer.MachineReadings.AddRange(
                 new MachineReading(RunningId, StartUtc.AddMinutes(1), 43, 0.8, 2100, 15, 0.02),
                 new MachineReading(RunningId, StartUtc.AddMinutes(2), 46, 0.9, 2200, 16, 0.04),
@@ -46,12 +55,27 @@ public sealed class MachineApiFixture : IAsyncLifetime
             await writer.SaveChangesAsync(token);
             writer.MachineReadings.Add(new MachineReading(RunningId, StartUtc.AddMinutes(3), 50, 1.1, 2350, 18, 0.07));
             await writer.SaveChangesAsync(token);
+            WarningAlarmId = warning.Id;
+            ResolvedAlarmId = resolved.Id;
         }
 
-        Client = host.WithWebHostBuilder(builder => builder.UseEnvironment("Testing")
+        Client = CreateClient("Testing");
+    }
+
+    internal HttpClient CreateClient(string environment, TimeProvider? clock = null)
+    {
+        SqliteTestDatabase store = database ?? throw new InvalidOperationException("Initialize the test database before creating a client.");
+        return host.WithWebHostBuilder(builder => builder.UseEnvironment(environment)
             .ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
                 new Dictionary<string, string?> { ["Simulation:Enabled"] = "false" }))
-            .ConfigureTestServices(services => services.AddScoped(_ => store.CreateContext())))
+            .ConfigureTestServices(services =>
+            {
+                services.AddScoped(_ => store.CreateContext());
+                if (clock is not null)
+                {
+                    services.AddSingleton(clock);
+                }
+            }))
             .CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
     }
 

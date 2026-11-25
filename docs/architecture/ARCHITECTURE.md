@@ -19,11 +19,13 @@ Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext
 
 The monitoring controllers validate route and query inputs and call the Application interfaces `IMachineQueries` and `IMachineTelemetryQueries`. Infrastructure projects data from the same SQLite tables the simulator writes. Read-only EF Core queries execute asynchronously with request cancellation. History and latest-reading queries share machine filtering and ordering. Controllers return DTOs and use the existing ProblemDetails pipeline for errors. [HTTP contract and examples](MONITORING-API.md) · [Read API decision](../adr/0002-monitoring-read-api.md)
 
+The alarm controller uses `IAlarmManagement` to query SQLite and record the first acknowledgement. The API limits acknowledgement to Development and Testing. [Alarm API and lifecycle](ALARMS.md)
+
 `GET /health` uses ASP.NET Core health checks to report process liveness. Dependency readiness checks belong in a later stage when external dependencies exist. The host provides structured logging and a centralized exception handler with ProblemDetails. Development exposes OpenAPI and uses a loopback HTTPS launch profile. The integration suite runs under `Testing` with TestServer and requires no development certificate. Production inherits base settings and can receive protected settings at deployment time.
 
 ## Simulated acquisition
 
-Application defines `IMachineDataSource`, which returns a domain `MachineReading` for a supplied machine. The Infrastructure implementation maintains one seeded model per profile. The API's opt-in hosted worker samples the source and creates a service scope for initialization and for each batch save. The worker uses `TimeProvider` for UTC timestamps and monotonic scheduling. [Configuration and lifecycle](SIMULATION.md)
+Application defines `IMachineDataSource`, which returns a domain `MachineReading` for a supplied machine. The Infrastructure implementation maintains one seeded model per profile. The API's opt-in hosted worker samples the source using `TimeProvider` for UTC timestamps and monotonic scheduling. The shared telemetry processor evaluates Application alarm rules on each frame and uses scoped SQLite writes for batches and alarm transitions. [Simulation configuration](SIMULATION.md) · [Alarm persistence decision](../adr/0003-alarm-lifecycle.md)
 
 ## Verification
 

@@ -11,7 +11,7 @@ internal sealed class SqliteTestDatabase(SqliteConnection connection) : IAsyncDi
 
     internal FactoryPulseDbContext CreateContext() => new(options);
 
-    internal static async Task<SqliteTestDatabase> OpenAsync(CancellationToken cancellationToken)
+    internal static async Task<SqliteTestDatabase> OpenAsync(CancellationToken cancellationToken, string? targetMigration = null)
     {
         var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True;Pooling=False");
         try
@@ -20,7 +20,7 @@ internal sealed class SqliteTestDatabase(SqliteConnection connection) : IAsyncDi
             await connection.OpenAsync(cancellationToken);
             var database = new SqliteTestDatabase(connection);
             await using FactoryPulseDbContext context = database.CreateContext();
-            await context.Database.MigrateAsync(cancellationToken);
+            await context.Database.MigrateAsync(targetMigration, cancellationToken);
             return database;
         }
         catch

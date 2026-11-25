@@ -22,7 +22,7 @@ The API's `Simulation` section supports JSON settings and ASP.NET Core environme
 | `Enabled` | `false` | Enables simulated acquisition and persistence |
 | `Seed` | `42` | Integer seed combined with each profile's ID for independent random streams |
 | `SamplingInterval` | 1 second | Time between samples, from 100 ms to 1 minute |
-| `PersistenceInterval` | 5 seconds | Minimum elapsed time between batch decisions, from the sampling interval to 1 hour |
+| `PersistenceInterval` | 5 seconds | Regular batch interval, from the sampling interval to 1 hour |
 | `HeatingTimeConstant` | 30 seconds | Controls the approach to operating temperature |
 | `CoolingTimeConstant` | 45 seconds | Controls the approach to ambient temperature |
 | `Profiles` | `CNC-001`, `CNC-002`, `CNC-003` | One to 32 machine profiles |
@@ -34,7 +34,7 @@ Both thermal time constants must be positive and at most 1 hour. Profiles specif
 - `CNC-001` and `CNC-002` start running with different profiles. Smoothed load drives correlated changes in RPM, vibration and torque. Temperature approaches the operating target, and tool wear increases toward its upper bound.
 - `CNC-003` starts idle. Idle and offline profiles report zero RPM, vibration, and torque. They cool toward ambient temperature and retain their current wear.
 - Startup reuses rows by machine code and preserves their database IDs. New rows use the configured IDs. The profile's status is applied at initialization. Each process start begins the simulation at ambient temperature with zero wear and a fresh seeded stream.
-- The worker keeps one reading per machine in memory. It writes the latest batch on the first sample at or after the persistence interval, using one `SaveChangesAsync` call. The timer coalesces missed ticks when work takes longer than one interval.
+- The worker keeps one reading per machine in memory. It writes the latest batch on the first sample at or after the persistence interval. An alarm transition triggers an immediate atomic write of readings and alarm changes. The timer coalesces missed ticks when work takes longer than one interval. [Alarm settings](ALARMS.md)
 - Cancellation stops the timer and releases the active service scope. Initialization and persistence failures are logged and propagated. SQLite retains written history independently of the bounded sampling memory.
 
 The model advances by the configured sampling step for each generated reading. Matching the configuration, seed, initial state, call sequence, and UTC clock values reproduces the readings within the same runtime.

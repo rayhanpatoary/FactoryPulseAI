@@ -8,7 +8,7 @@ FactoryPulse AI uses EF Core 10 with SQLite. The domain owns the machine, teleme
 | --- | --- |
 | `Machines` | A GUID, canonical uppercase machine code, name, optional description, type, location, status and UTC lifecycle timestamps |
 | `MachineReadings` | A generated integer ID, machine ID, UTC timestamp, temperature in °C, vibration in mm/s, rotational speed in rpm, torque in N·m and tool wear as a 0–1 fraction |
-| `MachineAlarms` | A generated integer ID, machine ID, alarm code, diagnostic message, severity, UTC creation time and optional UTC acknowledgement time |
+| `MachineAlarms` | A generated integer ID, machine ID, alarm code, diagnostic message, severity, UTC creation time and optional UTC acknowledgement and resolution times |
 
 ```mermaid
 erDiagram
@@ -24,9 +24,12 @@ Each reading or alarm belongs to one machine. SQLite restricts deletion of a mac
 | --- | --- | --- |
 | `Machines` | `MachineCode` | Enforce uniqueness and look up a canonical code |
 | `MachineReadings` | `MachineId, TimestampUtc` | Scan a machine's readings by time |
-| `MachineAlarms` | `MachineId, AcknowledgedAtUtc, CreatedAtUtc` | Filter open alarms and scan them by creation time |
+| `MachineAlarms` | `MachineId, AcknowledgedAtUtc, CreatedAtUtc` | Support the existing unacknowledged alarm lookup |
+| `MachineAlarms` | `MachineId, AlarmCode`, filtered to unresolved rows | Enforce one active occurrence per machine and code |
+| `MachineAlarms` | `CreatedAtUtc, Id` and `MachineId, CreatedAtUtc, Id` | Sort global and machine-scoped history |
+| `MachineAlarms` | `ResolvedAtUtc, CreatedAtUtc, Id` | Sort active alarms by creation time |
 
-The context uses `SaveChangesAsync` for writes. `MachineHistoryQueries.GetPageAsync` returns the machine and independent pages of its readings and open alarms. Each page allows 1–100 rows, uses no tracking, and sorts newest first with ID as the tiebreaker. Acknowledgement preserves the original UTC time. EF checks the acknowledgement column during updates to reject a stale write from another context.
+`MachineHistoryQueries.GetPageAsync` returns the machine and independent pages of its readings and active, unacknowledged alarms. Alarm REST queries also expose acknowledged active alarms and resolved history. Pages allow 1–100 rows, use no tracking, and sort newest first with ID as the tiebreaker. Acknowledgement and resolution use separate conditional updates so each preserves the other's timestamp. [Alarm HTTP contract](ALARMS.md)
 
 ## Local setup and migrations
 
@@ -49,6 +52,8 @@ dotnet ef database update @ef
 ```
 
 Apply migrations as part of deployment using configuration for the target environment. The API startup only registers persistence and validates the configured path. The integration suite creates its own in-memory SQLite schema using the same migration.
+
+`20261125225433_AlarmLifecycle` adds `ResolvedAtUtc` and the lifecycle indexes. Before enforcing active uniqueness, it keeps the newest legacy row active for each machine and code, using ID to break timestamp ties. Older duplicates are preserved with a resolution time set to the later of the surviving row's creation time and their own acknowledgement, when present.
 
 ## SQLite and future providers
 

@@ -69,7 +69,7 @@ public sealed class MachineHistoryQueries(FactoryPulseDbContext database) : IMac
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         List<MachineAlarm> openAlarms = await database.MachineAlarms.AsNoTracking()
-            .Where(alarm => alarm.MachineId == machineId && alarm.AcknowledgedAtUtc == null)
+            .Where(alarm => alarm.MachineId == machineId && alarm.AcknowledgedAtUtc == null && alarm.ResolvedAtUtc == null)
             .OrderByDescending(alarm => alarm.CreatedAtUtc)
             .ThenByDescending(alarm => alarm.Id)
             .Skip(alarmOffset)

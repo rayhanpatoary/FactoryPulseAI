@@ -15,15 +15,24 @@ internal sealed class MachineAlarmConfiguration : IEntityTypeConfiguration<Machi
             table.HasCheckConstraint("CK_MachineAlarms_Severity", "\"Severity\" IN (0, 1, 2)");
             table.HasCheckConstraint("CK_MachineAlarms_AcknowledgementOrder",
                 "\"AcknowledgedAtUtc\" IS NULL OR \"AcknowledgedAtUtc\" >= \"CreatedAtUtc\"");
+            table.HasCheckConstraint("CK_MachineAlarms_ResolutionOrder",
+                "\"ResolvedAtUtc\" IS NULL OR \"ResolvedAtUtc\" >= \"CreatedAtUtc\"");
         });
         builder.HasKey(alarm => alarm.Id);
         builder.Property(alarm => alarm.AlarmCode).HasMaxLength(MachineAlarm.CodeMaxLength).IsRequired();
         builder.Property(alarm => alarm.Message).HasMaxLength(MachineAlarm.MessageMaxLength).IsRequired();
         builder.Property(alarm => alarm.AcknowledgedAtUtc).IsConcurrencyToken();
         builder.Ignore(alarm => alarm.IsAcknowledged);
+        builder.Ignore(alarm => alarm.IsActive);
         builder.HasOne<Machine>().WithMany()
             .HasForeignKey(alarm => alarm.MachineId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(alarm => new { alarm.MachineId, alarm.AcknowledgedAtUtc, alarm.CreatedAtUtc });
+        builder.HasIndex(alarm => new { alarm.MachineId, alarm.AlarmCode })
+            .IsUnique().HasFilter("\"ResolvedAtUtc\" IS NULL");
+        builder.HasIndex(alarm => new { alarm.MachineId, alarm.CreatedAtUtc });
+        builder.HasIndex(alarm => alarm.CreatedAtUtc);
+        builder.HasIndex(alarm => alarm.CreatedAtUtc, "IX_MachineAlarms_Active_CreatedAtUtc")
+            .HasFilter("\"ResolvedAtUtc\" IS NULL");
     }
 }

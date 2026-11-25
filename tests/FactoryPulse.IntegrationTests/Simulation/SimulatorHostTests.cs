@@ -19,8 +19,10 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
 {
     private const int ProfileCount = 3;
 
-    [Fact]
-    public async Task EnabledWorkerPersistsAtConfiguredCadenceAndDisposesItsTimer()
+    [Theory]
+    [InlineData(false, 2)]
+    [InlineData(true, 1)]
+    public async Task EnabledWorkerPersistsAtConfiguredCadenceOrOnAnAlarmAndDisposesItsTimer(bool triggerAlarm, int writeTick)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(20));
@@ -39,7 +41,7 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
                 await migration.Database.MigrateAsync(token);
             }
 
-            await using (WebApplicationFactory<Program> host = CreateEnabledHost(databasePath, clock, probe))
+            await using (WebApplicationFactory<Program> host = CreateEnabledHost(databasePath, clock, probe, triggerAlarm))
             {
                 IServiceProvider services = host.Services;
                 TimeSpan interval = await clock.TimerStarted.Task.WaitAsync(token);
@@ -47,8 +49,12 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
 
                 clock.Advance(interval);
                 await probe.FirstFrameSampled.Task.WaitAsync(token);
-                clock.Advance(interval);
-                Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(400), await probe.FirstPersistedTime.Task.WaitAsync(token));
+                if (writeTick == 2)
+                {
+                    clock.Advance(interval);
+                }
+
+                Assert.Equal(DateTime.UnixEpoch.AddMilliseconds(200 * writeTick), await probe.FirstPersistedTime.Task.WaitAsync(token));
 
                 await using AsyncServiceScope scope = services.CreateAsyncScope();
                 FactoryPulseDbContext database = scope.ServiceProvider.GetRequiredService<FactoryPulseDbContext>();
@@ -57,6 +63,18 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
                 Assert.Equal(ProfileCount, readings.Count);
                 Assert.Equal(machines.Select(machine => machine.Id).Order(), readings.Select(reading => reading.MachineId).Order());
                 Assert.Equal(0, Assert.Single(readings, reading => reading.MachineId == machines[2].Id).Rpm);
+                List<MachineAlarm> alarms = await database.MachineAlarms.AsNoTracking().ToListAsync(token);
+                if (triggerAlarm)
+                {
+                    MachineAlarm alarm = Assert.Single(alarms);
+                    Assert.Equal(machines[1].Id, alarm.MachineId);
+                    Assert.Equal(AlarmCodes.TemperatureWarning, alarm.AlarmCode);
+                    Assert.True(alarm.IsActive);
+                }
+                else
+                {
+                    Assert.Empty(alarms);
+                }
             }
 
             Assert.True(clock.TimerStopped.Task.IsCompletedSuccessfully);
@@ -71,7 +89,7 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
         }
     }
 
-    private WebApplicationFactory<Program> CreateEnabledHost(string databasePath, ManualSimulationClock clock, TelemetryProbe probe)
+    private WebApplicationFactory<Program> CreateEnabledHost(string databasePath, ManualSimulationClock clock, TelemetryProbe probe, bool triggerAlarm)
     {
         return factory.WithWebHostBuilder(builder => builder.UseEnvironment("Testing")
             .ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
@@ -79,7 +97,9 @@ public sealed class SimulatorHostTests(WebApplicationFactory<Program> factory)
                 ["Database:Path"] = databasePath,
                 ["Simulation:Enabled"] = "true",
                 ["Simulation:SamplingInterval"] = "00:00:00.200",
-                ["Simulation:PersistenceInterval"] = "00:00:00.400"
+                ["Simulation:PersistenceInterval"] = "00:00:00.400",
+                ["AlarmDetection:TemperatureWarning"] = triggerAlarm ? "23.5" : "80",
+                ["AlarmDetection:TemperatureWarningClear"] = triggerAlarm ? "21" : "77"
             }))
             .ConfigureTestServices(services =>
             {

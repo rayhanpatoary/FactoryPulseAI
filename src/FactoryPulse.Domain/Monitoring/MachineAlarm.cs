@@ -34,12 +34,21 @@ public sealed class MachineAlarm
     public AlarmSeverity Severity { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public DateTime? AcknowledgedAtUtc { get; private set; }
+    public DateTime? ResolvedAtUtc { get; private set; }
     public bool IsAcknowledged => AcknowledgedAtUtc.HasValue;
+    public bool IsActive => !ResolvedAtUtc.HasValue;
 
     public void Acknowledge(DateTime acknowledgedAtUtc)
     {
         MonitoringValidation.RequireUtc(acknowledgedAtUtc);
         ArgumentOutOfRangeException.ThrowIfLessThan(acknowledgedAtUtc, CreatedAtUtc);
         AcknowledgedAtUtc ??= acknowledgedAtUtc;
+    }
+
+    public void Resolve(DateTime resolvedAtUtc)
+    {
+        MonitoringValidation.RequireUtc(resolvedAtUtc);
+        ArgumentOutOfRangeException.ThrowIfLessThan(resolvedAtUtc, CreatedAtUtc);
+        ResolvedAtUtc ??= resolvedAtUtc;
     }
 }
