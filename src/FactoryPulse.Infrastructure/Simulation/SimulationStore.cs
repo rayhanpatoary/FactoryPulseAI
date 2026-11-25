@@ -36,9 +36,4 @@ public sealed class SimulationStore(FactoryPulseDbContext database)
         return machines;
     }
 
-    public async Task SaveReadingsAsync(IReadOnlyList<MachineReading> readings, CancellationToken cancellationToken)
-    {
-        database.MachineReadings.AddRange(readings);
-        await database.SaveChangesAsync(cancellationToken);
-    }
 }

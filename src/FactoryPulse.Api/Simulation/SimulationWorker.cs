@@ -1,5 +1,6 @@
 using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Domain.Monitoring;
+using FactoryPulse.Infrastructure.Persistence;
 using FactoryPulse.Infrastructure.Simulation;
 using Microsoft.Extensions.Options;
 
@@ -52,8 +53,8 @@ internal sealed partial class SimulationWorker(
 
                 operation = "telemetry persistence";
                 await using AsyncServiceScope scope = scopeFactory.CreateAsyncScope();
-                await scope.ServiceProvider.GetRequiredService<SimulationStore>()
-                    .SaveReadingsAsync(latestReadings, stoppingToken);
+                await scope.ServiceProvider.GetRequiredService<TelemetryStore>()
+                    .SaveBatchAsync(latestReadings, [], [], stoppingToken);
                 lastPersistedAt = sampledAt;
             }
         }
