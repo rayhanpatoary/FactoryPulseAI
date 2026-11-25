@@ -8,5 +8,6 @@
     <PackageReference Include="xunit.v3" />
     <ProjectReference Include="../../src/FactoryPulse.Application/FactoryPulse.Application.csproj" />
     <ProjectReference Include="../../src/FactoryPulse.Domain/FactoryPulse.Domain.csproj" />
+    <ProjectReference Include="../../src/FactoryPulse.Infrastructure/FactoryPulse.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

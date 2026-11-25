@@ -37,6 +37,14 @@ FactoryPulse AI is a modular industrial platform designed for machine monitoring
 - Preserve history. Avoid squashing, amending, rewriting history, force-pushing, unnecessary merge commits, and automatic pushes.
 - Continue through the authorized stage after each commit. Report the short hash and subject of each new commit at handoff.
 
+## Git Branching, Integration and Merge Policy
+
+- Start each independently meaningful feature or bug fix from the latest suitable local `main` before editing. Use `feature/<name>` or `bugfix/<name>` with a short, meaningful suffix containing lowercase letters, digits and hyphens. Limit the whole branch name to 15 characters. Keep implementation commits off `main` and keep each branch focused on its own change and related tests, configuration and documentation.
+- Follow the atomic commit policy above. Keep tests close to their changes, build and test before committing, use Conventional Commits, and stage and inspect only related files. Preserve user work and history. Exclude secrets, local databases and generated temporary files.
+- At completion, commit the feature, verify the working tree is clean and confirm the intended branch is active. Merge the latest local `main` **into** that branch. Resolve conflicts while preserving feature changes and unrelated work. An already up-to-date result is valid.
+- On the working branch after integration, rerun restore, build, relevant tests, formatting and analyzers. Confirm the branch and final Git status. Leave the branch active for review. Automatic merges into `main`, pushes and remote pull requests require separate authorization.
+- Report the branch, change summary, commit hashes and subjects, build and test results, main-to-branch integration outcome, post-merge verification, final Git status and review readiness.
+
 ## Workflow and definition of done
 
 1. Read the current requirements, architecture, and relevant ADRs. Inspect the existing implementation and preserve unrelated changes.

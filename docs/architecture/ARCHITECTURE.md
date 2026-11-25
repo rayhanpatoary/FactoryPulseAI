@@ -6,9 +6,9 @@ FactoryPulse AI starts as a modular monolith with one deployable ASP.NET Core pr
 | --- | --- | --- |
 | `FactoryPulse.Domain` | Machine, reading and alarm models and validation | None |
 | `FactoryPulse.Application` | Use cases and boundary contracts | Domain |
-| `FactoryPulse.Infrastructure` | SQLite mappings, migrations and history queries | Application, Domain |
-| `FactoryPulse.Api` | HTTP endpoints, middleware, dependency registration | Application, Infrastructure |
-| `FactoryPulse.UnitTests` | Application and domain behavior in isolation | Application, Domain |
+| `FactoryPulse.Infrastructure` | SQLite persistence and the simulated machine data source | Application, Domain |
+| `FactoryPulse.Api` | HTTP endpoints, middleware, dependency registration and simulation hosting | Application, Infrastructure |
+| `FactoryPulse.UnitTests` | Application, domain and simulator behavior in isolation | Application, Domain, Infrastructure |
 | `FactoryPulse.IntegrationTests` | API behavior and relational persistence | API, Infrastructure |
 
 Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext`. The API registers the scoped context and history queries using validated database path options. EF Core tooling uses the API as its startup project so it resolves the same configuration and provider. Schema migrations run explicitly as a setup or deployment step. [Database design and migration commands](DATABASE.md).
@@ -18,6 +18,10 @@ Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext
 `GET /api/status` enters `StatusController`, which delegates to `ApplicationStatusService`. The service returns the configured instance name, the fixed simulation mode, and UTC time from `TimeProvider`. API startup binds and validates `ApplicationStatus:InstanceName` and composes the use case. In deployments, the name can be overridden with `ApplicationStatus__InstanceName` and `AllowedHosts` can be set to the allowed hostnames.
 
 `GET /health` uses ASP.NET Core health checks to report process liveness. Dependency readiness checks belong in a later stage when external dependencies exist. The host provides structured logging and a centralized exception handler with ProblemDetails. Development exposes OpenAPI and uses a loopback HTTPS launch profile. The integration suite runs under `Testing` with TestServer and requires no development certificate. Production inherits base settings and can receive protected settings at deployment time.
+
+## Simulated acquisition
+
+Application defines `IMachineDataSource`, which returns a domain `MachineReading` for a supplied machine. The Infrastructure implementation maintains one seeded model per profile. The API's opt-in hosted worker samples the source and creates a service scope for initialization and for each batch save. The worker uses `TimeProvider` for UTC timestamps and monotonic scheduling. [Configuration and lifecycle](SIMULATION.md)
 
 ## Verification
 
