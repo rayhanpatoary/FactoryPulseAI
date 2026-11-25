@@ -1,3 +1,4 @@
+using FactoryPulse.Api.Persistence;
 using FactoryPulse.Application.Status;
 using Microsoft.Extensions.Options;
 
@@ -6,6 +7,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
+builder.AddFactoryPulseDatabase();
 
 if (builder.Environment.IsDevelopment())
 {
