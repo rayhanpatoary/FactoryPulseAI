@@ -11,7 +11,17 @@ public sealed class Machine
     private Machine() { }
 
     public Machine(string machineCode, string name, string machineType, string location, DateTime createdAtUtc, string? description = null)
+        : this(Guid.NewGuid(), machineCode, name, machineType, location, createdAtUtc, description)
     {
+    }
+
+    public Machine(Guid id, string machineCode, string name, string machineType, string location, DateTime createdAtUtc, string? description = null)
+    {
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("A machine requires a nonempty ID.", nameof(id));
+        }
+
         string code = MonitoringValidation.RequiredText(machineCode, CodeMaxLength);
         if (code.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not ('-' or '_')))
         {
@@ -19,7 +29,7 @@ public sealed class Machine
         }
 
         MonitoringValidation.RequireUtc(createdAtUtc);
-        Id = Guid.NewGuid();
+        Id = id;
         MachineCode = code.ToUpperInvariant();
         Name = MonitoringValidation.RequiredText(name, NameMaxLength);
         MachineType = MonitoringValidation.RequiredText(machineType, TypeMaxLength);
