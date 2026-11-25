@@ -2,7 +2,7 @@
 
 [Deutsche Projektübersicht](README.de.md)
 
-FactoryPulse AI is a portfolio project for simulated industrial machine monitoring, quality inspection, and predictive maintenance. Day 1, Stage 1 delivers a .NET 10 solution with a small ASP.NET Core API and automated tests. The project uses simulated data and operates without a connection to industrial equipment.
+FactoryPulse AI is a portfolio project for simulated industrial machine monitoring, quality inspection, and predictive maintenance. Day 1, Stage 2 adds machine, telemetry, and alarm persistence with EF Core and SQLite to the .NET 10 API foundation. The project operates without a connection to industrial equipment.
 
 ## Run locally
 
@@ -37,5 +37,6 @@ On Windows, use `.\.dotnet\dotnet.exe` in place of `dotnet` if the SDK was unpac
 
 - [Requirements and release scope](docs/REQUIREMENTS.md)
 - [Architecture and verification](docs/architecture/ARCHITECTURE.md)
+- [SQLite setup and migration commands](docs/architecture/DATABASE.md)
 - [Initial architecture decision](docs/adr/0001-initial-architecture.md)
 - [Development instructions](AGENTS.md)

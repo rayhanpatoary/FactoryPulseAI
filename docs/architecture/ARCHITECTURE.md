@@ -4,14 +4,14 @@ FactoryPulse AI starts as a modular monolith with one deployable ASP.NET Core pr
 
 | Project | Responsibility | Direct project references |
 | --- | --- | --- |
-| `FactoryPulse.Domain` | Domain rules and models | None |
+| `FactoryPulse.Domain` | Machine, reading and alarm models and validation | None |
 | `FactoryPulse.Application` | Use cases and boundary contracts | Domain |
-| `FactoryPulse.Infrastructure` | External adapters | Application |
+| `FactoryPulse.Infrastructure` | SQLite mappings, migrations and history queries | Application, Domain |
 | `FactoryPulse.Api` | HTTP endpoints, middleware, dependency registration | Application, Infrastructure |
-| `FactoryPulse.UnitTests` | Application behavior in isolation | Application |
-| `FactoryPulse.IntegrationTests` | API behavior through an in-process host | API |
+| `FactoryPulse.UnitTests` | Application and domain behavior in isolation | Application, Domain |
+| `FactoryPulse.IntegrationTests` | API behavior and relational persistence | API, Infrastructure |
 
-Infrastructure may reference Domain directly when an adapter requires it. Domain and Infrastructure are class library projects awaiting their first domain rule and adapter, respectively.
+Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext`. The API registers the scoped context and history queries using validated database path options. EF Core tooling uses the API as its startup project so it resolves the same configuration and provider. Schema migrations run explicitly as a setup or deployment step. [Database design and migration commands](DATABASE.md).
 
 ## Request flow
 
@@ -21,4 +21,4 @@ Infrastructure may reference Domain directly when an adapter requires it. Domain
 
 ## Verification
 
-Unit tests control the application clock to assert status deterministically. Integration tests exercise the real pipeline and receive HTTP responses from the in-process server. Both suites use xUnit v3 on Microsoft.Testing.Platform with Coverlet for coverage. The [README](../../README.md) lists the restore, build, test, and format commands.
+Unit tests verify application and domain rules with fixed timestamps. API integration tests exercise the real pipeline through an in-process server. Persistence tests apply the migrations in isolated SQLite databases and verify the relationships, constraints, acknowledgement updates, and paged queries. Both suites use xUnit v3 on Microsoft.Testing.Platform with Coverlet for coverage. The [README](../../README.md) lists the restore, build, test, and format commands.
