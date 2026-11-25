@@ -9,7 +9,11 @@ using Microsoft.Extensions.Options;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<MachineStatus>(allowIntegerValues: false)));
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<MachineStatus>(allowIntegerValues: false));
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<AlarmSeverity>(allowIntegerValues: false));
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<AlarmLifecycleState>(allowIntegerValues: false));
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
