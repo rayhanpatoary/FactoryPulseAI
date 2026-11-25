@@ -38,6 +38,13 @@ public sealed class MachineApiFixture : IAsyncLifetime
             var idle = new Machine(IdleId, "CNC-003", "Mill C", "CNC", "Line B", StartUtc);
             idle.ChangeStatus(MachineStatus.Idle, StartUtc);
             writer.Machines.AddRange(idle, running, other);
+            writer.MachineReadings.AddRange(
+                new MachineReading(RunningId, StartUtc.AddMinutes(1), 43, 0.8, 2100, 15, 0.02),
+                new MachineReading(RunningId, StartUtc.AddMinutes(2), 46, 0.9, 2200, 16, 0.04),
+                new MachineReading(RunningId, StartUtc.AddMinutes(3), 49, 1.0, 2300, 17, 0.06),
+                new MachineReading(OtherId, StartUtc.AddMinutes(4), 55, 1.2, 3600, 19, 0.05));
+            await writer.SaveChangesAsync(token);
+            writer.MachineReadings.Add(new MachineReading(RunningId, StartUtc.AddMinutes(3), 50, 1.1, 2350, 18, 0.07));
             await writer.SaveChangesAsync(token);
         }
 

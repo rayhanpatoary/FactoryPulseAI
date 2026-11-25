@@ -23,6 +23,9 @@ public sealed class MachineQueries(FactoryPulseDbContext database) : IMachineQue
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken) =>
+        database.Machines.AsNoTracking().AnyAsync(machine => machine.Id == id, cancellationToken);
+
     public async Task<MachineSummary> SummarizeAsync(CancellationToken cancellationToken)
     {
         Dictionary<MachineStatus, long> counts = await database.Machines.AsNoTracking()

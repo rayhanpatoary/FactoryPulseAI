@@ -25,6 +25,7 @@ internal static class DatabaseRegistration
             options.UseSqlite(connection.ToString());
         });
         builder.Services.AddScoped<MachineHistoryQueries>();
+        builder.Services.AddScoped<IMachineTelemetryQueries>(services => services.GetRequiredService<MachineHistoryQueries>());
         builder.Services.AddScoped<IMachineQueries, MachineQueries>();
     }
 
