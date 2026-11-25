@@ -8,5 +8,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="xunit.v3" />
     <ProjectReference Include="../../src/FactoryPulse.Api/FactoryPulse.Api.csproj" />
+    <ProjectReference Include="../../src/FactoryPulse.Infrastructure/FactoryPulse.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
