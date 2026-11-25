@@ -98,16 +98,32 @@ namespace FactoryPulse.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("ResolvedAtUtc")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Severity")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("MachineId", "AlarmCode")
+                        .IsUnique()
+                        .HasFilter("\"ResolvedAtUtc\" IS NULL");
+
+                    b.HasIndex("MachineId", "CreatedAtUtc");
+
                     b.HasIndex("MachineId", "AcknowledgedAtUtc", "CreatedAtUtc");
+
+                    b.HasIndex(new[] { "CreatedAtUtc" }, "IX_MachineAlarms_Active_CreatedAtUtc")
+                        .HasFilter("\"ResolvedAtUtc\" IS NULL");
 
                     b.ToTable("MachineAlarms", null, t =>
                         {
                             t.HasCheckConstraint("CK_MachineAlarms_AcknowledgementOrder", "\"AcknowledgedAtUtc\" IS NULL OR \"AcknowledgedAtUtc\" >= \"CreatedAtUtc\"");
+
+                            t.HasCheckConstraint("CK_MachineAlarms_ResolutionOrder", "\"ResolvedAtUtc\" IS NULL OR \"ResolvedAtUtc\" >= \"CreatedAtUtc\"");
 
                             t.HasCheckConstraint("CK_MachineAlarms_Severity", "\"Severity\" IN (0, 1, 2)");
 
