@@ -16,6 +16,39 @@ public sealed class MachineHistoryQueries(FactoryPulseDbContext database) : IMac
     public Task<MachineTelemetry?> GetLatestAsync(Guid machineId, CancellationToken cancellationToken) =>
         LatestFirst(ReadingsFor(machineId)).Select(ProjectTelemetry).FirstOrDefaultAsync(cancellationToken);
 
+    public async Task<TelemetryHistoryPage> GetHistoryAsync(
+        Guid machineId, TelemetryHistoryFilter filter, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(filter.Page, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(filter.Page, TelemetryHistoryFilter.MaxPageNumber);
+        ArgumentOutOfRangeException.ThrowIfLessThan(filter.PageSize, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(filter.PageSize, TelemetryHistoryFilter.MaxPageSize);
+
+        IQueryable<MachineReading> readings = ReadingsFor(machineId);
+        if (filter.FromUtc is DateTime from)
+        {
+            readings = readings.Where(reading => reading.TimestampUtc >= from);
+        }
+
+        if (filter.ToUtc is DateTime to)
+        {
+            readings = readings.Where(reading => reading.TimestampUtc < to);
+        }
+
+        int offset = (filter.Page - 1) * filter.PageSize;
+        // Fetch one extra row to determine if another page exists without a count query.
+        List<MachineTelemetry> items = await LatestFirst(readings)
+            .Skip(offset).Take(filter.PageSize + 1)
+            .Select(ProjectTelemetry).ToListAsync(cancellationToken);
+        bool hasMore = items.Count > filter.PageSize;
+        if (hasMore)
+        {
+            items.RemoveAt(filter.PageSize);
+        }
+
+        return new TelemetryHistoryPage(filter.Page, filter.PageSize, hasMore, items);
+    }
+
     public async Task<MachineHistoryPage?> GetPageAsync(
         Guid machineId, int readingOffset, int alarmOffset, int pageSize, CancellationToken cancellationToken)
     {
