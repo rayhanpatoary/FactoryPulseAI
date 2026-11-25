@@ -2,5 +2,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <ProjectReference Include="../FactoryPulse.Application/FactoryPulse.Application.csproj" />
+    <ProjectReference Include="../FactoryPulse.Domain/FactoryPulse.Domain.csproj" />
   </ItemGroup>
 </Project>
