@@ -19,9 +19,9 @@ Infrastructure maps the domain entities to SQLite through `FactoryPulseDbContext
 
 The monitoring controllers validate route and query inputs and call the Application interfaces `IMachineQueries` and `IMachineTelemetryQueries`. Infrastructure projects data from the same SQLite tables the simulator writes. Read-only EF Core queries execute asynchronously with request cancellation. History and latest-reading queries share machine filtering and ordering. Controllers return DTOs and use the existing ProblemDetails pipeline for errors. [HTTP contract and examples](MONITORING-API.md) · [Read API decision](../adr/0002-monitoring-read-api.md)
 
-The alarm controller uses `IAlarmManagement` to query SQLite and record the first acknowledgement. The API limits acknowledgement to Development and Testing. [Alarm API and lifecycle](ALARMS.md)
+The alarm controller uses `IAlarmManagement` to query SQLite and record the first acknowledgement. Operator and Administrator sessions can acknowledge alarms when the request includes a valid antiforgery token. [Alarm API and lifecycle](ALARMS.md)
 
-The API also exposes a read-only SignalR hub at `/hubs/monitoring` in Development and Testing. The simulator and alarm persistence use the Application publisher port. The SignalR adapter sends live readings and committed lifecycle events through the hub context. [Real-time contracts and client synchronization](REALTIME.md) · [Live delivery decision](../adr/0004-live-monitoring-delivery.md)
+The API hosts Identity and enforces role policies for REST and the read-only SignalR hub. Production SignalR requires explicit opt-in. The simulator and alarm persistence use the Application publisher port to distribute readings and committed alarm lifecycle events. [Authentication](AUTHENTICATION.md) · [Real-time contracts](REALTIME.md)
 
 The Angular web client loads REST snapshots and applies live readings by UTC sample time. It keeps histories paginated, caps the samples used by each chart, and presents REST state when the hub is unavailable. [Web dashboard](WEB.md) · [Client integration decision](../adr/0005-web-monitoring-client.md)
 

@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   catchError,
   EMPTY,
+  filter,
   forkJoin,
   from,
   map,
@@ -11,6 +12,7 @@ import {
   of,
   Subject,
   switchMap,
+  takeUntil,
   toArray,
 } from 'rxjs';
 import { LiveReading, Machine, Reading } from './models';
@@ -24,13 +26,15 @@ export class MonitoringStore {
   private readonly realtime = inject(MonitoringRealtime);
   private readonly reload = new Subject<void>();
   private readonly reloadAlarms = new Subject<void>();
+  private readonly leaveSession = new Subject<void>();
   private readonly catalog = signal<Machine[]>([]);
   private readonly known = computed(() => new Set(this.catalog().map((machine) => machine.id)));
   private readonly live = signal<ReadonlyMap<string, LiveReading>>(new Map());
   private readonly persisted = signal<ReadonlyMap<string, Reading>>(new Map());
   private loaded = false;
+  private active = false;
 
-  readonly loading = signal(true);
+  readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly alarmError = signal<string | null>(null);
   readonly mode = signal<string | null>(null);
@@ -56,6 +60,7 @@ export class MonitoringStore {
     const refresh = merge(this.reload, this.realtime.recovered);
     refresh
       .pipe(
+        filter(() => this.active),
         switchMap(() => {
           this.loading.set(true);
           this.error.set(null);
@@ -71,6 +76,7 @@ export class MonitoringStore {
               ),
             ),
           }).pipe(
+            takeUntil(this.leaveSession),
             catchError((error: unknown) => {
               this.error.set(errorKey(error));
               this.loading.set(false);
@@ -98,8 +104,10 @@ export class MonitoringStore {
 
     merge(refresh, this.reloadAlarms, this.realtime.alarms)
       .pipe(
+        filter(() => this.active),
         switchMap(() =>
           this.api.activeSummary().pipe(
+            takeUntil(this.leaveSession),
             catchError((error: unknown) => {
               this.alarmError.set(errorKey(error));
               return of(null);
@@ -112,9 +120,29 @@ export class MonitoringStore {
         if (counts) this.alarmError.set(null);
         this.alarmCounts.set(counts);
       });
+  }
 
+  start() {
+    if (this.active) return;
+    this.active = true;
     void this.realtime.connect();
     this.refresh();
+  }
+
+  stop() {
+    this.active = false;
+    this.loaded = false;
+    this.leaveSession.next();
+    void this.realtime.disconnect();
+    this.catalog.set([]);
+    this.live.set(new Map());
+    this.persisted.set(new Map());
+    this.mode.set(null);
+    this.lastUpdate.set(null);
+    this.alarmCounts.set(null);
+    this.alarmError.set(null);
+    this.error.set(null);
+    this.loading.set(false);
   }
 
   refresh() {
@@ -126,6 +154,7 @@ export class MonitoringStore {
   }
 
   private accept(sample: LiveReading) {
+    if (!this.active) return;
     if (this.loaded && !this.known().has(sample.machineId)) return;
     const previous = this.live().get(sample.machineId);
     if (previous && compareUtc(sample.timestampUtc, previous.timestampUtc) <= 0) return;

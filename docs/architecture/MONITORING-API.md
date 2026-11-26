@@ -1,6 +1,6 @@
 # Machine monitoring REST API
 
-The API reads machines and telemetry from the configured SQLite database. Apply the migration before making monitoring requests. Enable simulated acquisition to populate a local database with sample data. The development base URL is `https://localhost:7161`. Configure authentication and authorization at the deployment boundary before exposing these endpoints publicly. [Database setup](DATABASE.md) · [Simulator setup](SIMULATION.md)
+The API reads machines and telemetry from the configured SQLite database. Apply the migrations before making monitoring requests. Enable simulated acquisition to populate a local database with sample data. The development base URL is `https://localhost:7161`. Monitoring requests require a cookie session with a monitoring role. [Authentication](AUTHENTICATION.md) · [Database setup](DATABASE.md) · [Simulator setup](SIMULATION.md)
 
 ## Endpoints
 

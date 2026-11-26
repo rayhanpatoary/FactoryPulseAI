@@ -1,3 +1,4 @@
+using FactoryPulse.Api.Security;
 using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Domain.Monitoring;
 using FactoryPulse.Infrastructure.Persistence;
@@ -62,7 +63,7 @@ public sealed class MachineApiFixture : IAsyncLifetime
         Client = CreateClient("Testing");
     }
 
-    internal HttpClient CreateClient(string environment, TimeProvider? clock = null)
+    internal HttpClient CreateClient(string environment, TimeProvider? clock = null, string role = MonitoringAccess.Operator)
     {
         SqliteTestDatabase store = database ?? throw new InvalidOperationException("Initialize the test database before creating a client.");
         return host.WithWebHostBuilder(builder => builder.UseEnvironment(environment)
@@ -70,6 +71,7 @@ public sealed class MachineApiFixture : IAsyncLifetime
                 new Dictionary<string, string?> { ["Simulation:Enabled"] = "false" }))
             .ConfigureTestServices(services =>
             {
+                services.AddMonitoringTestSession(role);
                 services.AddScoped(_ => store.CreateContext());
                 if (clock is not null)
                 {

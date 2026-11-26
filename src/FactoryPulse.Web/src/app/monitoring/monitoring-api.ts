@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { EMPTY, expand, map, reduce } from 'rxjs';
+import { EMPTY, expand, map, reduce, switchMap } from 'rxjs';
 import { Alarm, AlarmFilters, Machine, MachineDetails, Page, Reading } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -59,7 +59,9 @@ export class MonitoringApi {
   }
 
   acknowledge(id: number) {
-    return this.http.post<Alarm>(`/api/alarms/${id}/acknowledge`, null);
+    return this.http
+      .get<void>('/api/auth/csrf')
+      .pipe(switchMap(() => this.http.post<Alarm>(`/api/alarms/${id}/acknowledge`, null)));
   }
 
   private machinePath(id: string) {

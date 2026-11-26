@@ -55,6 +55,8 @@ Apply migrations as part of deployment using configuration for the target enviro
 
 `20261125225433_AlarmLifecycle` adds `ResolvedAtUtc` and the lifecycle indexes. Before enforcing active uniqueness, it keeps the newest legacy row active for each machine and code, using ID to break timestamp ties. Older duplicates are preserved with a resolution time set to the later of the surviving row's creation time and their own acknowledgement, when present.
 
+`20261126150622_MonitoringIdentity` adds Identity tables and their indexes to the same context. Applying it preserves monitoring data. Rolling it back removes Identity accounts and roles, so back up the database before a rollback. [Account provisioning](AUTHENTICATION.md)
+
 ## SQLite and future providers
 
 Timestamps are stored as integer .NET ticks and rehydrated as UTC `DateTime` values. This preserves precision and permits server-side comparison and ordering. SQLite serializes writers and may rebuild tables for some schema changes. EF Core's SQLite provider supports scripts from a known migration version. [SQLite provider limitations](https://learn.microsoft.com/en-us/ef/core/providers/sqlite/limitations).

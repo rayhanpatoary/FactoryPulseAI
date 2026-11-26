@@ -42,13 +42,8 @@ Without a transition, telemetry is persisted on the configured batch schedule. A
 
 Lists are ordered newest first by creation time and ID. The response contains `page`, `pageSize`, `hasMore`, and `items`. Pass `page` from 1 to 10,000 and `pageSize` from 1 to 100. The defaults are 1 and 25. An item includes `id`, `machineId`, `alarmCode`, `message`, `severity`, `state`, `createdAtUtc`, `acknowledgedAtUtc`, and `resolvedAtUtc`. The last two are nullable. Alarm codes are stable identifiers suitable for localization.
 
-```powershell
-Invoke-RestMethod 'https://localhost:7161/api/alarms?active=true&severity=Warning&pageSize=10'
-Invoke-RestMethod -Method Post 'https://localhost:7161/api/alarms/1/acknowledge'
-```
-
-Use an ID returned by the list when acknowledging. Repeating the request returns the original acknowledgement time and the current alarm state. The write is available only in Development and Testing. Other environments return `403` for valid IDs until operator authorization is available. Invalid inputs return `400` with ProblemDetails.
+Send monitoring reads with the authenticated session cookie. Operators and Administrators can acknowledge an alarm in the dashboard or by sending the alarm ID with a valid antiforgery token. Repeating the request returns the original acknowledgement time and current alarm state. Invalid inputs return `400` with ProblemDetails. [Session and antiforgery requirements](AUTHENTICATION.md)
 
 ## Verification
 
-xUnit covers exact trigger boundaries, hysteresis, temperature severity transitions, independent vibration, lifecycle rules, and invalid settings. SQLite integration tests verify migration upgrade and rollback, transactional persistence, deduplication, restart behavior, and immediate writes through the simulator host. WebApplicationFactory tests cover filtering and pagination, machine scoping, acknowledgement and idempotency, validation responses, and the environment restriction.
+xUnit covers exact trigger boundaries, hysteresis, temperature severity transitions, independent vibration, lifecycle rules, and invalid settings. SQLite integration tests verify migration upgrade and rollback, transactional persistence, deduplication, restart behavior, and immediate writes through the simulator host. WebApplicationFactory tests cover filtering and pagination, machine scoping, acknowledgement and idempotency, validation responses, and role restrictions.

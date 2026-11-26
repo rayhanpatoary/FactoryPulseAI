@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Xunit;
 
@@ -25,7 +26,7 @@ public sealed class MonitoringEndpointTests(WebApplicationFactory<Program> facto
             {
                 ["RealtimeMonitoring:Enabled"] = enabled.ToString(),
                 ["Simulation:Enabled"] = "false"
-            })));
+            })).ConfigureTestServices(services => services.AddMonitoringTestSession()));
         using HttpClient client = host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
         using var request = new HttpRequestMessage(HttpMethod.Post, "/hubs/monitoring/negotiate?negotiateVersion=1");
         if (origin is not null)

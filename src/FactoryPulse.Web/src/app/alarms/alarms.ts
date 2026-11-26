@@ -10,7 +10,7 @@ import { errorKey, MonitoringApi } from '../monitoring/monitoring-api';
 import { MonitoringStore } from '../monitoring/monitoring-store';
 import { Pagination } from '../monitoring/pagination';
 import { MonitoringRealtime } from '../monitoring/realtime';
-import { WebConfig } from '../web-config';
+import { AuthSession } from '../auth/auth-session';
 
 @Component({
   selector: 'fp-alarms',
@@ -23,7 +23,7 @@ export class Alarms {
   private readonly realtime = inject(MonitoringRealtime);
   private readonly destroy = inject(DestroyRef);
   private readonly refresh = new Subject<void>();
-  protected readonly config = inject(WebConfig);
+  protected readonly session = inject(AuthSession);
   protected readonly store = inject(MonitoringStore);
   protected readonly pending = signal<number | null>(null);
   protected readonly writeError = signal<string | null>(null);
@@ -66,7 +66,7 @@ export class Alarms {
   }
 
   protected acknowledge(id: number) {
-    if (!this.config.acknowledgementEnabled() || this.pending() !== null) return;
+    if (!this.session.canAcknowledge() || this.pending() !== null) return;
     this.pending.set(id);
     this.writeError.set(null);
     this.api
@@ -82,7 +82,7 @@ export class Alarms {
         },
         error: (error: unknown) => {
           if (error instanceof HttpErrorResponse && error.status === 403)
-            this.config.disableAcknowledgement();
+            this.session.disableAcknowledgement();
           this.writeError.set(errorKey(error));
         },
       });

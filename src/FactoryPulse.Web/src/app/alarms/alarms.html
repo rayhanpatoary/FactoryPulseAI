@@ -55,7 +55,7 @@
       <fp-alarm-table
         [alarms]="page.items"
         [machines]="store.machines()"
-        [allowAcknowledgement]="config.acknowledgementEnabled()"
+        [allowAcknowledgement]="session.canAcknowledge()"
         [pending]="pending()"
         (acknowledged)="acknowledge($event)"
       />

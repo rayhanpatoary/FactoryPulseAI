@@ -1,9 +1,12 @@
 using FactoryPulse.Domain.Monitoring;
+using FactoryPulse.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FactoryPulse.Infrastructure.Persistence;
 
-public sealed class FactoryPulseDbContext(DbContextOptions<FactoryPulseDbContext> options) : DbContext(options)
+public sealed class FactoryPulseDbContext(DbContextOptions<FactoryPulseDbContext> options)
+    : IdentityDbContext<MonitoringUser>(options)
 {
     public DbSet<Machine> Machines => Set<Machine>();
     public DbSet<MachineReading> MachineReadings => Set<MachineReading>();
@@ -14,10 +17,11 @@ public sealed class FactoryPulseDbContext(DbContextOptions<FactoryPulseDbContext
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcTimestampConverter>();
     }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        modelBuilder.ApplyConfiguration(new MachineConfiguration());
-        modelBuilder.ApplyConfiguration(new MachineReadingConfiguration());
-        modelBuilder.ApplyConfiguration(new MachineAlarmConfiguration());
+        base.OnModelCreating(builder);
+        builder.ApplyConfiguration(new MachineConfiguration());
+        builder.ApplyConfiguration(new MachineReadingConfiguration());
+        builder.ApplyConfiguration(new MachineAlarmConfiguration());
     }
 }

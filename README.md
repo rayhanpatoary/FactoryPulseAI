@@ -13,7 +13,7 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 - **Simulated acquisition.** An opt-in simulator generates repeatable telemetry for three CNC profiles and writes the latest readings to SQLite in batches.
 - **Machine monitoring API.** Read the machine catalog, status counts, latest readings, and paginated history with UTC date filters. [Endpoints and examples](docs/architecture/MONITORING-API.md)
 - **Alarm management.** Configurable temperature and vibration rules detect and resolve abnormal conditions. REST endpoints expose active alarms and history. [Alarm settings and endpoints](docs/architecture/ALARMS.md)
-- **Real-time monitoring.** SignalR streams live readings and committed alarm updates in Development and Testing. [Hub and event contracts](docs/architecture/REALTIME.md)
+- **Real-time monitoring.** SignalR streams live readings and committed alarm updates to signed-in users. Production streaming requires explicit opt-in. [Hub and event contracts](docs/architecture/REALTIME.md)
 - **Web dashboard.** The English and German Angular client shows machine status, telemetry charts, alarms, and paginated measurement history. [Web setup and requirements](docs/architecture/WEB.md)
 - **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations.
 
@@ -59,7 +59,7 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 | `https://localhost:7161/api/status` | Instance name, simulation mode, and UTC observation time |
 | `https://localhost:7161/openapi/v1.json` | OpenAPI document in Development |
 
-With the API running, open a second terminal and start the dashboard using Node.js 24. Open `http://localhost:4200`. [Dashboard commands and proxy configuration](docs/architecture/WEB.md)
+Provision a local account, then start the API and open a second terminal for the dashboard. Use Node.js 24 and sign in at `http://localhost:4200`. [Account provisioning](docs/architecture/AUTHENTICATION.md) · [Dashboard setup](docs/architecture/WEB.md)
 
 ```powershell
 Set-Location src/FactoryPulse.Web
@@ -73,7 +73,7 @@ ASP.NET Core loads defaults from `appsettings.json` and validates typed settings
 
 After applying the database migration, set `Simulation__Enabled=true` before starting the API to record simulated readings. [Simulator setup and settings](docs/architecture/SIMULATION.md)
 
-The `AlarmDetection` settings control trigger and clear limits. Alarm acknowledgement is available in Development and Testing. [Thresholds and access restrictions](docs/architecture/ALARMS.md)
+The `AlarmDetection` settings control trigger and clear limits. Users with the Operator or Administrator role can acknowledge alarms. [Alarm thresholds](docs/architecture/ALARMS.md) · [Access policies](docs/architecture/AUTHENTICATION.md)
 
 ## Testing and quality assurance
 
@@ -93,7 +93,8 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Simulated machine telemetry and batch storage | Implemented |
 | Read-only machine catalog, status summary, and telemetry API | Implemented |
 | Temperature and vibration alarms, lifecycle, and REST queries | Implemented |
-| SignalR stream for telemetry and alarm updates | Implemented for Development and Testing |
+| Authenticated SignalR stream for telemetry and alarm updates | Implemented with explicit Production opt-in |
+| Identity cookie sessions and role-based access | Implemented |
 | Angular monitoring dashboard with English and German localization | Implemented |
 | GitHub Actions validation for the API and web client | Configured |
 | WPF operator interface | Planned |

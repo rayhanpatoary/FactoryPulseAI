@@ -67,12 +67,8 @@ The API implements the Application publisher with SignalR's `IHubContext`. Each 
 
 ## Configuration and local verification
 
-`RealtimeMonitoring:Enabled` defaults to `true`. Set `RealtimeMonitoring__Enabled=false` and restart to disable both the hub and broadcasts. The API maps the hub only in Development and Testing. Production and Staging return `404` even when broadcasting is enabled in configuration. The local HTTPS profile binds to loopback. The hub exposes no client-callable operations. Browser requests with an Origin header must match the request origin, including for WebSockets. Use the same origin for local browser clients and an authenticated deployment boundary before exposing telemetry beyond local development or testing.
+`RealtimeMonitoring:Enabled` defaults to `true` and enables the authenticated hub in Development and Testing. Production also requires `RealtimeMonitoring:AllowProduction=true`. The read policy applies to every mapped hub. Browser requests with an Origin header must match the request origin, including for WebSockets. The hub has no client-callable operations. [Authentication, opt-in and session expiry](AUTHENTICATION.md)
 
-Apply the migrations and start the HTTPS profile using the repository setup instructions. To check local negotiation, run the following from another PowerShell session. Enable `Simulation__Enabled` before starting the host to stream live readings. [Local setup](../../README.md) · [Simulator settings](SIMULATION.md)
-
-```powershell
-Invoke-RestMethod -Method Post 'https://localhost:7161/hubs/monitoring/negotiate?negotiateVersion=1'
-```
+Apply the migrations, provision an account, and start the HTTPS profile with the simulator enabled to stream readings. Sign in to the dashboard and check its live connection status. [Local provisioning](AUTHENTICATION.md) · [Simulator settings](SIMULATION.md)
 
 Run `dotnet test --solution FactoryPulseAI.slnx --no-build` after building to exercise SignalR connections, payloads, alarm commits, disconnect cleanup, and the environment restriction with an in-process server and controlled simulator time.

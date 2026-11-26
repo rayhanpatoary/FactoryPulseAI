@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -77,6 +78,6 @@ public sealed class ApiEndpointTests(WebApplicationFactory<Program> factory)
             .ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ApplicationStatus:InstanceName"] = instanceName
-            })));
+            })).ConfigureTestServices(services => services.AddMonitoringTestSession()));
     }
 }

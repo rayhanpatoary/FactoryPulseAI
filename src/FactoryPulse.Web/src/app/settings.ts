@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Language } from './i18n/language';
-import { WebConfig } from './web-config';
+import { AuthSession } from './auth/auth-session';
 
 @Component({
   selector: 'fp-settings',
@@ -31,7 +31,7 @@ import { WebConfig } from './web-config';
       <h2>{{ 'settings.mode' | translate }}</h2>
       <p>{{ 'common.simulation' | translate }}</p>
       <p>
-        {{ (config.acknowledgementEnabled() ? 'settings.ackEnabled' : 'settings.readOnly') | translate }}
+        {{ (session.canAcknowledge() ? 'settings.ackEnabled' : 'settings.readOnly') | translate }}
       </p>
     </section>
   `,
@@ -39,5 +39,5 @@ import { WebConfig } from './web-config';
 })
 export class Settings {
   protected readonly language = inject(Language);
-  protected readonly config = inject(WebConfig);
+  protected readonly session = inject(AuthSession);
 }

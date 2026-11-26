@@ -2,19 +2,24 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using FactoryPulse.Api.Persistence;
 using FactoryPulse.Api.Realtime;
+using FactoryPulse.Api.Security;
 using FactoryPulse.Api.Simulation;
 using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Application.Status;
 using FactoryPulse.Domain.Monitoring;
 using Microsoft.Extensions.Options;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+bool provisionUser = args is ["provision-user", ..];
+WebApplicationBuilder builder = WebApplication.CreateBuilder(provisionUser ? [] : args);
 
-builder.Services.AddControllers().AddJsonOptions(options => ConfigureMonitoringJson(options.JsonSerializerOptions));
+builder.Services.AddControllersWithViews().AddJsonOptions(options => ConfigureMonitoringJson(options.JsonSerializerOptions));
 builder.Services.AddSignalR().AddJsonProtocol(options => ConfigureMonitoringJson(options.PayloadSerializerOptions));
 builder.Services.AddOptions<RealtimeMonitoringOptions>().BindConfiguration(RealtimeMonitoringOptions.SectionName).ValidateOnStart();
 builder.Services.AddSingleton<IRealtimeMonitoringPublisher, SignalRMonitoringPublisher>();
 builder.Services.AddProblemDetails();
+builder.Services.AddMonitoringIdentity();
+builder.Services.AddSingleton<ActiveMonitoringSessions>();
+builder.Services.AddScoped<AccountProvisioning>();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
 builder.AddFactoryPulseSimulation();
@@ -43,15 +48,41 @@ builder.Services.AddSingleton(services => new ApplicationStatusService(
 
 WebApplication app = builder.Build();
 
+if (provisionUser)
+{
+    Environment.ExitCode = await AccountProvisioning.RunAsync(app.Services, args);
+    await app.DisposeAsync();
+    return;
+}
+
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
+    {
+        context.Response.Headers.CacheControl = "no-store";
+        if (!context.Request.IsHttps)
+        {
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            return;
+        }
+    }
+
+    await next(context);
+});
+app.UseRouting();
+app.UseAuthentication();
+app.UseRateLimiter();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.MapControllers();
+app.MapControllers().RequireAuthorization(MonitoringAccess.Read);
 app.MapHealthChecks("/health");
 app.MapFactoryPulseMonitoringHub();
 

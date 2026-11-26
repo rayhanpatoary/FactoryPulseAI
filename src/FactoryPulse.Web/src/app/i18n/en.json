@@ -115,8 +115,21 @@
     "language": "Language",
     "languageHelp": "The language preference is saved on this device.",
     "mode": "Operating mode",
-    "readOnly": "Alarm acknowledgement is disabled for this web deployment.",
-    "ackEnabled": "Alarm acknowledgement is enabled for this web deployment."
+    "readOnly": "Your role has read-only access to alarms.",
+    "ackEnabled": "Your role allows alarm acknowledgement."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "signOut": "Sign out",
+    "userName": "Username",
+    "password": "Password",
+    "required": "This field is required.",
+    "invalid": "Sign-in was declined. Check your credentials or contact your administrator if your account is locked.",
+    "throttled": "Too many sign-in attempts. Try again shortly.",
+    "error": "The authentication request could not be completed.",
+    "expired": "Your session expired. Sign in to continue.",
+    "role": { "Viewer": "Viewer", "Operator": "Operator", "Administrator": "Administrator" }
   },
   "errors": {
     "offline": "The monitoring API is unreachable.",

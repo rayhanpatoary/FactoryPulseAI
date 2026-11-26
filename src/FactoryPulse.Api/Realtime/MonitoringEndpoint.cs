@@ -1,3 +1,4 @@
+using FactoryPulse.Api.Security;
 using Microsoft.Extensions.Options;
 
 namespace FactoryPulse.Api.Realtime;
@@ -29,6 +30,7 @@ internal static class MonitoringEndpoint
             await next(context);
         });
 
-        app.MapHub<MonitoringHub>(Path);
+        app.MapHub<MonitoringHub>(Path, options => options.CloseOnAuthenticationExpiration = true)
+            .RequireAuthorization(MonitoringAccess.Read);
     }
 }
