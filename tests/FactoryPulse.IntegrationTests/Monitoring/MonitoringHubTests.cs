@@ -66,6 +66,66 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
         Assert.Equal(connectionId, await probe.Disconnected.Task.WaitAsync(token));
     }
 
+    [Fact]
+    public async Task AlarmEventsCarryCommittedIdsAndRepeatedReadingsDoNotDuplicateOpenings()
+    {
+        using var timeout = CreateTimeout();
+        CancellationToken token = timeout.Token;
+        await using SqliteTestDatabase database = await SqliteTestDatabase.OpenAsync(token);
+        var clock = new ManualSimulationClock();
+        var source = new ControlledSource(clock) { FirstMachineTemperature = 85 };
+        await using WebApplicationFactory<Program> host = CreateHost(database, clock, source, simulationEnabled: true);
+        using HttpClient api = host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        await using HubConnection connection = CreateConnection(host);
+        var messages = Channel.CreateUnbounded<(string Name, JsonElement Payload)>();
+        using IDisposable openedSubscription = Subscribe(connection, messages.Writer, "AlarmOpened");
+        using IDisposable resolvedSubscription = Subscribe(connection, messages.Writer, "AlarmResolved");
+        using IDisposable readingSubscription = Subscribe(connection, messages.Writer, "MachineReadingUpdated");
+        await connection.StartAsync(token);
+        await host.Services.GetRequiredService<ConnectionProbe>().Connected.Task.WaitAsync(token);
+        TimeSpan interval = await clock.TimerStarted.Task.WaitAsync(token);
+
+        clock.Advance(interval);
+        (string openedName, JsonElement opened) = await messages.Reader.ReadAsync(token);
+        Assert.Equal("AlarmOpened", openedName);
+        long id = opened.GetProperty("alarmId").GetInt64();
+        Assert.True(id > 0);
+        Assert.Equal("TEMPERATURE_WARNING", opened.GetProperty("alarmCode").GetString());
+        Assert.Equal("Warning", opened.GetProperty("severity").GetString());
+        Assert.Equal("1970-01-01T00:00:00.2Z", opened.GetProperty("createdAtUtc").GetString());
+        Assert.True(opened.GetProperty("isActive").GetBoolean());
+        Assert.False(opened.GetProperty("isAcknowledged").GetBoolean());
+        JsonElement active = await api.GetFromJsonAsync<JsonElement>("/api/alarms/active", token);
+        Assert.Equal(id, Assert.Single(active.GetProperty("items").EnumerateArray()).GetProperty("id").GetInt64());
+        await ExpectReadingsAsync();
+
+        clock.Advance(interval);
+        await ExpectReadingsAsync();
+
+        source.FirstMachineTemperature = 76;
+        clock.Advance(interval);
+        (string resolvedName, JsonElement resolved) = await messages.Reader.ReadAsync(token);
+        Assert.Equal("AlarmResolved", resolvedName);
+        Assert.Equal(id, resolved.GetProperty("alarmId").GetInt64());
+        Assert.Equal(opened.GetProperty("machineId").GetGuid(), resolved.GetProperty("machineId").GetGuid());
+        Assert.Equal("TEMPERATURE_WARNING", resolved.GetProperty("alarmCode").GetString());
+        Assert.Equal("1970-01-01T00:00:00.6Z", resolved.GetProperty("resolvedAtUtc").GetString());
+        JsonElement history = await api.GetFromJsonAsync<JsonElement>("/api/alarms?active=false", token);
+        Assert.Equal(id, Assert.Single(history.GetProperty("items").EnumerateArray()).GetProperty("id").GetInt64());
+        await ExpectReadingsAsync();
+
+        async Task ExpectReadingsAsync()
+        {
+            for (int index = 0; index < ProfileCount; index++)
+            {
+                Assert.Equal("MachineReadingUpdated", (await messages.Reader.ReadAsync(token)).Name);
+            }
+        }
+    }
+
+    private static IDisposable Subscribe(HubConnection connection, ChannelWriter<(string Name, JsonElement Payload)> writer, string name) =>
+        connection.On<JsonElement>(name, payload => writer.TryWrite((name, payload)));
+
     private WebApplicationFactory<Program> CreateHost(
         SqliteTestDatabase database, ManualSimulationClock clock, ControlledSource source, bool simulationEnabled) =>
         factory.WithWebHostBuilder(builder => builder.UseEnvironment("Testing")
@@ -113,8 +173,14 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
 
     private sealed class ControlledSource(TimeProvider clock) : IMachineDataSource
     {
-        public ValueTask<MachineReading> ReadAsync(Machine machine, CancellationToken cancellationToken) =>
-            ValueTask.FromResult(new MachineReading(machine.Id, clock.GetUtcNow().UtcDateTime, 45, 1.25, 2400, 18, 0.1));
+        internal double FirstMachineTemperature { get; set; } = 45;
+
+        public ValueTask<MachineReading> ReadAsync(Machine machine, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            double temperature = machine.MachineCode == "CNC-001" ? FirstMachineTemperature : 45;
+            return ValueTask.FromResult(new MachineReading(machine.Id, clock.GetUtcNow().UtcDateTime, temperature, 1.25, 2400, 18, 0.1));
+        }
     }
 
     private sealed class ConnectionProbe(ILogger<DefaultHubLifetimeManager<MonitoringHub>> logger)

@@ -5,7 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace FactoryPulse.Infrastructure.Persistence;
 
 // One instance belongs to one sequential telemetry ingestion loop.
-public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceScopeFactory scopes)
+public sealed class TelemetryProcessor(
+    AlarmDetectionService detector, IServiceScopeFactory scopes, IRealtimeMonitoringPublisher realtime)
 {
     private static readonly AlarmType WarningType = new(AlarmCodes.TemperatureWarning, AlarmSeverity.Warning, "High machine temperature.");
     private static readonly AlarmType CriticalType = new(AlarmCodes.TemperatureCritical, AlarmSeverity.Critical, "Critical machine temperature.");
@@ -15,6 +16,7 @@ public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceS
     private readonly Dictionary<Guid, ActiveAlarms> pending = [];
     private readonly List<MachineAlarm> opened = [];
     private readonly List<AlarmResolution> resolutions = [];
+    private readonly List<(MachineAlarm Alarm, DateTime? ResolvedAtUtc)> transitions = [];
 
     public async Task InitializeAsync(Guid[] machineIds, CancellationToken cancellationToken)
     {
@@ -56,6 +58,7 @@ public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceS
         pending.Clear();
         opened.Clear();
         resolutions.Clear();
+        transitions.Clear();
         if (detector.Enabled)
         {
             foreach (MachineReading reading in readings)
@@ -90,6 +93,19 @@ public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceS
             active[id] = state;
         }
 
+        if (transitions.Count > 0)
+        {
+            // The successful batch assigned alarm IDs and committed all lifecycle changes.
+            var events = new MonitoringEvent[transitions.Count];
+            for (int index = 0; index < events.Length; index++)
+            {
+                (MachineAlarm alarm, DateTime? resolvedAt) = transitions[index];
+                events[index] = resolvedAt is DateTime timestamp ? AlarmResolved.From(alarm, timestamp) : AlarmOpened.From(alarm);
+            }
+
+            await realtime.PublishAsync(events, cancellationToken);
+        }
+
         return persisted;
     }
 
@@ -101,6 +117,7 @@ public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceS
             {
                 activeAlarm = new MachineAlarm(reading.MachineId, type.Code, type.Message, type.Severity, reading.TimestampUtc);
                 opened.Add(activeAlarm);
+                RecordTransition(activeAlarm, resolvedAtUtc: null);
             }
 
             return activeAlarm;
@@ -115,7 +132,20 @@ public sealed class TelemetryProcessor(AlarmDetectionService detector, IServiceS
             resolutions.Add(new AlarmResolution(activeAlarm.Id, reading.TimestampUtc));
         }
 
+        if (activeAlarm is not null)
+        {
+            RecordTransition(activeAlarm, reading.TimestampUtc);
+        }
+
         return null;
+    }
+
+    private void RecordTransition(MachineAlarm alarm, DateTime? resolvedAtUtc)
+    {
+        if (realtime.IsEnabled)
+        {
+            transitions.Add((alarm, resolvedAtUtc));
+        }
     }
 
     private readonly record struct AlarmType(string Code, AlarmSeverity Severity, string Message);

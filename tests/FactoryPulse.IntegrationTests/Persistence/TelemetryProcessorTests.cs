@@ -29,7 +29,8 @@ public sealed class TelemetryProcessorTests
         await using ServiceProvider provider = services.BuildServiceProvider();
         IServiceScopeFactory scopes = provider.GetRequiredService<IServiceScopeFactory>();
         var detector = new AlarmDetectionService(new AlarmDetectionOptions());
-        var processor = new TelemetryProcessor(detector, scopes);
+        var publisher = new RecordingPublisher();
+        var processor = new TelemetryProcessor(detector, scopes, publisher);
         Guid[] machineIds = [first.Id, second.Id];
         await processor.InitializeAsync(machineIds, token);
         Assert.False(await Tick(processor, first, 0, 70, 1));
@@ -43,7 +44,7 @@ public sealed class TelemetryProcessorTests
             await writer.SaveChangesAsync(token);
         }
 
-        var restarted = new TelemetryProcessor(detector, scopes);
+        var restarted = new TelemetryProcessor(detector, scopes, publisher);
         await restarted.InitializeAsync(machineIds, token);
         Assert.False(await Tick(restarted, first, 3, 78, 4.5));
         Assert.True(await Tick(restarted, first, 4, 95, 3.9));
@@ -62,9 +63,54 @@ public sealed class TelemetryProcessorTests
         Assert.Equal(start.AddSeconds(5), Assert.Single(history, alarm => alarm.Severity == AlarmSeverity.Critical).ResolvedAtUtc);
         Assert.Equal(second.Id, Assert.Single(history, alarm => alarm.IsActive).MachineId);
         Assert.Equal(4, await reader.MachineReadings.CountAsync(token));
+        Assert.Equal(4, publisher.Events.OfType<AlarmOpened>().Count());
+        Assert.Equal(3, publisher.Events.OfType<AlarmResolved>().Count());
 
         Task<bool> Tick(TelemetryProcessor session, Machine machine, int second, double temperature, double vibration) =>
             session.ProcessAsync([new MachineReading(machine.Id, start.AddSeconds(second), temperature, vibration, 2400, 18, 0.1)],
                 persistenceDue: false, token);
+    }
+
+    [Fact]
+    public async Task FailedAlarmWriteDoesNotPublishATransition()
+    {
+        CancellationToken token = TestContext.Current.CancellationToken;
+        DateTime start = DateTime.UnixEpoch;
+        await using SqliteTestDatabase database = await SqliteTestDatabase.OpenAsync(token);
+        var machine = new Machine("CNC-TEST", "Mill", "CNC", "Test", start);
+        await using FactoryPulseDbContext writer = database.CreateContext();
+        writer.Machines.Add(machine);
+        await writer.SaveChangesAsync(token);
+
+        var services = new ServiceCollection();
+        services.AddScoped(_ => database.CreateContext());
+        services.AddScoped<TelemetryStore>();
+        await using ServiceProvider provider = services.BuildServiceProvider();
+        var publisher = new RecordingPublisher();
+        var processor = new TelemetryProcessor(new AlarmDetectionService(new AlarmDetectionOptions()),
+            provider.GetRequiredService<IServiceScopeFactory>(), publisher);
+        await processor.InitializeAsync([machine.Id], token);
+
+        // A competing database write makes this session's next opening violate active uniqueness.
+        writer.MachineAlarms.Add(new MachineAlarm(machine.Id, AlarmCodes.TemperatureWarning, "Warning", AlarmSeverity.Warning, start));
+        await writer.SaveChangesAsync(token);
+        var sample = new MachineReading(machine.Id, start.AddSeconds(1), 85, 1, 2400, 18, 0.1);
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => processor.ProcessAsync([sample], persistenceDue: false, token));
+        Assert.Empty(publisher.Events);
+        Assert.Equal(0, await writer.MachineReadings.CountAsync(token));
+    }
+
+    private sealed class RecordingPublisher : IRealtimeMonitoringPublisher
+    {
+        public bool IsEnabled => true;
+
+        internal List<MonitoringEvent> Events { get; } = [];
+
+        public Task PublishAsync(IReadOnlyList<MonitoringEvent> events, CancellationToken cancellationToken)
+        {
+            Events.AddRange(events);
+            return Task.CompletedTask;
+        }
     }
 }
