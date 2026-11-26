@@ -115,8 +115,21 @@
     "language": "Sprache",
     "languageHelp": "Die Spracheinstellung wird auf diesem Gerät gespeichert.",
     "mode": "Betriebsmodus",
-    "readOnly": "Die Alarmquittierung ist für diese Webbereitstellung deaktiviert.",
-    "ackEnabled": "Die Alarmquittierung ist für diese Webbereitstellung aktiviert."
+    "readOnly": "Ihre Rolle erlaubt nur den lesenden Zugriff auf Alarme.",
+    "ackEnabled": "Ihre Rolle erlaubt die Quittierung von Alarmen."
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signingIn": "Anmeldung läuft …",
+    "signOut": "Abmelden",
+    "userName": "Benutzername",
+    "password": "Passwort",
+    "required": "Dieses Feld ist erforderlich.",
+    "invalid": "Anmeldung abgelehnt. Prüfen Sie Ihre Zugangsdaten. Wenden Sie sich bei einem gesperrten Konto an die Administration.",
+    "throttled": "Zu viele Anmeldeversuche. Versuchen Sie es in Kürze erneut.",
+    "error": "Die Authentifizierungsanfrage konnte nicht abgeschlossen werden.",
+    "expired": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an.",
+    "role": { "Viewer": "Lesezugriff", "Operator": "Bedienpersonal", "Administrator": "Administration" }
   },
   "errors": {
     "offline": "Die Überwachungs-API ist nicht erreichbar.",

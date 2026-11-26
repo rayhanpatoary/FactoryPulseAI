@@ -1,0 +1,47 @@
+<main class="sign-in">
+  <section class="surface panel">
+    <header class="page-heading">
+      <div>
+        <h1>FactoryPulse AI</h1>
+        <p>{{ 'auth.signIn' | translate }}</p>
+      </div>
+      <select
+        class="language-switch"
+        [attr.aria-label]="'settings.language' | translate"
+        [value]="language.code()"
+        (change)="language.set($any($event.target).value === 'de' ? 'de' : 'en')"
+      >
+        <option value="en">EN</option>
+        <option value="de">DE</option>
+      </select>
+    </header>
+    @if (session.expired()) {
+      <p class="notice" role="status">{{ 'auth.expired' | translate }}</p>
+    }
+    @if (error(); as message) {
+      <p class="notice error" role="alert">{{ message | translate }}</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field>
+        <mat-label>{{ 'auth.userName' | translate }}</mat-label>
+        <input matInput formControlName="userName" maxlength="256" autocomplete="username" required />
+        <mat-error>{{ 'auth.required' | translate }}</mat-error>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'auth.password' | translate }}</mat-label>
+        <input
+          matInput
+          formControlName="password"
+          maxlength="256"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+        <mat-error>{{ 'auth.required' | translate }}</mat-error>
+      </mat-form-field>
+      <button matButton="filled" type="submit" [disabled]="busy()">
+        {{ (busy() ? 'auth.signingIn' : 'auth.signIn') | translate }}
+      </button>
+    </form>
+  </section>
+</main>
