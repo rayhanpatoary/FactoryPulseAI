@@ -13,7 +13,7 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 - **Simulierte Datenerfassung.** Ein zuschaltbarer Simulator erzeugt reproduzierbare Telemetrie für drei CNC-Profile und speichert die jeweils neuesten Messwerte gesammelt in SQLite.
 - **API für die Maschinenüberwachung.** Maschinenbestand, Anzahl je Status, aktuelle Messwerte und den paginierten Messwertverlauf mit UTC-Zeitfiltern abrufen. [Endpunkte und Beispiele](docs/architecture/MONITORING-API.md)
 - **Alarmverwaltung.** Konfigurierbare Regeln für Temperatur und Schwingung erkennen auffällige Messwerte und beenden Alarme nach Rückkehr in den Normalbereich. Die REST-API liefert aktive Alarme und den Verlauf. [Alarmeinstellungen und Endpunkte](docs/architecture/ALARMS.md)
-- **Echtzeitüberwachung.** SignalR überträgt aktuelle Messwerte und gespeicherte Alarmänderungen in den Umgebungen Development und Testing. [Hub und Ereignisformate](docs/architecture/REALTIME.md)
+- **Echtzeitüberwachung.** SignalR überträgt aktuelle Messwerte und gespeicherte Alarmänderungen an angemeldete Personen. In der Produktionsumgebung muss der Stream ausdrücklich aktiviert werden. [Hub und Ereignisformate](docs/architecture/REALTIME.md)
 - **Web-Dashboard.** Die Angular-Oberfläche zeigt Maschinenzustände, Messwertdiagramme, Alarme und den paginierten Messwertverlauf auf Deutsch und Englisch. [Einrichtung und Voraussetzungen](docs/architecture/WEB.md)
 - **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen.
 
@@ -59,7 +59,7 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 | `https://localhost:7161/api/status` | Instanzname, Simulationsmodus und UTC-Zeitstempel der Abfrage |
 | `https://localhost:7161/openapi/v1.json` | OpenAPI-Dokument in der Entwicklungsumgebung |
 
-Starten Sie bei laufender API das Dashboard in einem zweiten Terminal mit Node.js 24. Öffnen Sie `http://localhost:4200`. [Dashboard-Befehle und Proxy-Konfiguration](docs/architecture/WEB.md)
+Legen Sie ein lokales Konto an, starten Sie die API und öffnen Sie ein zweites Terminal für das Dashboard. Verwenden Sie Node.js 24 und melden Sie sich unter `http://localhost:4200` an. [Konto anlegen](docs/architecture/AUTHENTICATION.md) · [Dashboard einrichten](docs/architecture/WEB.md)
 
 ```powershell
 Set-Location src/FactoryPulse.Web
@@ -73,7 +73,7 @@ ASP.NET Core lädt Standardwerte aus `appsettings.json` und validiert typisierte
 
 Führen Sie die Datenbankmigration aus und setzen Sie vor dem API-Start `Simulation__Enabled=true`, um simulierte Messwerte zu speichern. [Simulatoreinrichtung und Einstellungen](docs/architecture/SIMULATION.md)
 
-Unter `AlarmDetection` lassen sich Auslöse- und Rücksetzgrenzen einstellen. Die Alarmquittierung ist in den Umgebungen Development und Testing verfügbar. [Grenzwerte und Zugriffsbeschränkungen](docs/architecture/ALARMS.md)
+Unter `AlarmDetection` lassen sich Auslöse- und Rücksetzgrenzen einstellen. Alarme können mit der Rolle Operator oder Administrator quittiert werden. [Grenzwerte](docs/architecture/ALARMS.md) · [Zugriffsregeln](docs/architecture/AUTHENTICATION.md)
 
 ## Automatisierte Tests und Qualitätssicherung
 
@@ -93,7 +93,8 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Simulierte Maschinentelemetrie und gebündelte Speicherung | Implementiert |
 | Schreibgeschützte REST-API für Maschinenbestand, Statusübersicht und Messwerte | Implementiert |
 | Temperatur- und Schwingungsalarme, Alarmlebenszyklus und REST-Abfragen | Implementiert |
-| SignalR-Stream für Messwerte und Alarmänderungen | Für Development und Testing implementiert |
+| Authentifizierter SignalR-Stream für Messwerte und Alarmänderungen | Implementiert, für Production explizit aktivierbar |
+| Identity-Cookie-Sitzungen und rollenbasierter Zugriff | Implementiert |
 | Angular-Dashboard für die Maschinenüberwachung auf Deutsch und Englisch | Implementiert |
 | Prüfungen für API und Web-Client mit GitHub Actions | Konfiguriert |
 | WPF-Bedienoberfläche | Geplant |

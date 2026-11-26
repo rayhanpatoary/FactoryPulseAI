@@ -4,7 +4,7 @@ The Angular client in `src/FactoryPulse.Web` shows simulated machine status, liv
 
 ## Local development
 
-Use Node.js 24, npm, and the .NET SDK pinned in `global.json`. Follow these commands in PowerShell from the repository root. If using the workspace-local Windows SDK, substitute `./.dotnet/dotnet.exe` for `dotnet`. The first terminal starts the API and sample generator. Omit the simulation override or set it to `false` to run with the stored machine data alone.
+Use Node.js 24, npm, and the .NET SDK pinned in `global.json`. Follow these commands in PowerShell from the repository root. If using the workspace-local Windows SDK, substitute `./.dotnet/dotnet.exe` for `dotnet`. Provision a local account after applying the migrations and before opening the dashboard. Omit the simulation override or set it to `false` to run with the stored machine data alone. [Account provisioning](AUTHENTICATION.md)
 
 ```powershell
 dotnet restore FactoryPulseAI.slnx
@@ -36,9 +36,9 @@ Runtime English and German dictionaries are provided through ngx-translate. Numb
 
 ## Deployment settings
 
-The production client build is written to `src/FactoryPulse.Web/dist/browser`. A host must serve SPA routes from `index.html` and forward the API paths on the same origin. Live updates remain restricted to Development and Testing. In environments where the hub is unavailable, REST views continue to work and the shell shows the connection state.
+The production client build is written to `src/FactoryPulse.Web/dist/browser`. A host must serve SPA routes from `index.html` and forward the API paths on the same HTTPS origin. If the production hub is disabled, authenticated REST views continue to work and the shell shows the connection state.
 
-`/web-config.json` defaults to `{"allowAlarmAcknowledgement": false}`. An explicitly authorized Development or Testing instance can serve the same file with that value set to `true`. The API still authorizes each acknowledgement. A `403` disables the control for that browser session. Keep the option disabled for public deployments, and keep configuration and files served to the browser free of secrets.
+Provision a local account before opening the dashboard. The login page establishes the server cookie session, and the protected shell starts REST and SignalR after authentication. The API derives acknowledgement permissions from the current role. [Provisioning and session behavior](AUTHENTICATION.md)
 
 ## Verification
 
@@ -54,6 +54,6 @@ npx --no-install playwright install chromium
 npm run e2e
 ```
 
-To verify the real local integration, start both services as above and run `$env:FACTORYPULSE_WEB_LIVE = 'development'` followed by `npm run e2e`. The live test checks an actual WebSocket reading, the rendered machine timestamp, and the machine chart route. With a migrated empty database and a Production API with simulation disabled, use `FACTORYPULSE_WEB_LIVE=production` to check fallback behavior. Clear the variable before running the fixture suite again.
+For a real backend run, configure an isolated test account and use the live Playwright instructions in the authentication guide. [Testing authenticated live monitoring](AUTHENTICATION.md)
 
 [Monitoring REST contracts](MONITORING-API.md) · [Alarm contracts](ALARMS.md) · [Real-time delivery](REALTIME.md)
