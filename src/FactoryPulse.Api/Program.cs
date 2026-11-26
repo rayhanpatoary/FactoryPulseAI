@@ -13,6 +13,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers().AddJsonOptions(options => ConfigureMonitoringJson(options.JsonSerializerOptions));
 builder.Services.AddSignalR().AddJsonProtocol(options => ConfigureMonitoringJson(options.PayloadSerializerOptions));
 builder.Services.AddOptions<RealtimeMonitoringOptions>().BindConfiguration(RealtimeMonitoringOptions.SectionName).ValidateOnStart();
+builder.Services.AddSingleton<IRealtimeMonitoringPublisher, SignalRMonitoringPublisher>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
