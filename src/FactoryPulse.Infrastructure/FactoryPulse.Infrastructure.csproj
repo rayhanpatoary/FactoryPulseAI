@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <ProjectReference Include="../FactoryPulse.Application/FactoryPulse.Application.csproj" />
     <ProjectReference Include="../FactoryPulse.Domain/FactoryPulse.Domain.csproj" />
