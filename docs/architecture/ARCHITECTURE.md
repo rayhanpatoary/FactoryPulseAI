@@ -21,6 +21,8 @@ The monitoring controllers validate route and query inputs and call the Applicat
 
 The alarm controller uses `IAlarmManagement` to query SQLite and record the first acknowledgement. The API limits acknowledgement to Development and Testing. [Alarm API and lifecycle](ALARMS.md)
 
+The API also exposes a read-only SignalR hub at `/hubs/monitoring` in Development and Testing. The simulator and alarm persistence use the Application publisher port. The SignalR adapter sends live readings and committed lifecycle events through the hub context. [Real-time contracts and client synchronization](REALTIME.md) · [Live delivery decision](../adr/0004-live-monitoring-delivery.md)
+
 `GET /health` uses ASP.NET Core health checks to report process liveness. Dependency readiness checks belong in a later stage when external dependencies exist. The host provides structured logging and a centralized exception handler with ProblemDetails. Development exposes OpenAPI and uses a loopback HTTPS launch profile. The integration suite runs under `Testing` with TestServer and requires no development certificate. Production inherits base settings and can receive protected settings at deployment time.
 
 ## Simulated acquisition

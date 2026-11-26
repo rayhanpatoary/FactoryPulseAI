@@ -13,6 +13,7 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 - **Simulierte Datenerfassung.** Ein zuschaltbarer Simulator erzeugt reproduzierbare Telemetrie für drei CNC-Profile und speichert die jeweils neuesten Messwerte gesammelt in SQLite.
 - **API für die Maschinenüberwachung.** Maschinenbestand, Anzahl je Status, aktuelle Messwerte und den paginierten Messwertverlauf mit UTC-Zeitfiltern abrufen. [Endpunkte und Beispiele](docs/architecture/MONITORING-API.md)
 - **Alarmverwaltung.** Konfigurierbare Regeln für Temperatur und Schwingung erkennen auffällige Messwerte und beenden Alarme nach Rückkehr in den Normalbereich. Die REST-API liefert aktive Alarme und den Verlauf. [Alarmeinstellungen und Endpunkte](docs/architecture/ALARMS.md)
+- **Echtzeitüberwachung.** SignalR überträgt aktuelle Messwerte und gespeicherte Alarmänderungen in den Umgebungen Development und Testing. [Hub und Ereignisformate](docs/architecture/REALTIME.md)
 - **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen.
 
 ## Softwarearchitektur und Technologien
@@ -83,12 +84,13 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Simulierte Maschinentelemetrie und gebündelte Speicherung | Implementiert |
 | Schreibgeschützte REST-API für Maschinenbestand, Statusübersicht und Messwerte | Implementiert |
 | Temperatur- und Schwingungsalarme, Alarmlebenszyklus und REST-Abfragen | Implementiert |
-| Durchgängige Maschinenüberwachung | In Arbeit. Simulierte Datenerfassung und REST-Abfragen sind vorhanden. Live-Übertragung und Bedienoberflächen sind geplant. |
+| SignalR-Stream für Messwerte und Alarmänderungen | Für Development und Testing implementiert |
+| Bedienoberflächen | Geplant |
 | Qualitätsprüfung, vorausschauende Analysen und automatisierte Bereitstellung | Geplant |
 
 ## Roadmap
 
-- **Telemetrie und Diagnose.** Live-Telemetrie mit SignalR bereitstellen. OPC UA für den lesenden Zugriff prüfen und weitere Datenquellen über Plugins anbinden.
+- **Telemetrie und Diagnose.** OPC UA für den lesenden Zugriff prüfen und weitere Datenquellen über Plugins anbinden.
 - **Bedienoberflächen.** Eine Angular-Weboberfläche und einen WPF-Desktop-Client für Maschinenzustände, Trends und Alarme entwickeln.
 - **Qualitätsprüfung und Analysen.** Kamerabasierte Qualitätsprüfung mit OpenCV ergänzen und vorausschauende Wartung mit ML.NET evaluieren.
 - **Bereitstellung und Betrieb.** Docker und Docker Compose ergänzen, Prüfungen mit GitHub Actions automatisieren und Kubernetes für die Orchestrierung evaluieren.

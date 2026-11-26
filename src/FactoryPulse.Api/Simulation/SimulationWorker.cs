@@ -11,6 +11,7 @@ internal sealed partial class SimulationWorker(
     IMachineDataSource source,
     IServiceScopeFactory scopeFactory,
     TelemetryProcessor telemetry,
+    IRealtimeMonitoringPublisher realtime,
     TimeProvider clock,
     ILogger<SimulationWorker> logger) : BackgroundService
 {
@@ -53,6 +54,17 @@ internal sealed partial class SimulationWorker(
                 if (await telemetry.ProcessAsync(latestReadings, persistenceDue, stoppingToken))
                 {
                     lastPersistedAt = sampledAt;
+                }
+
+                if (realtime.IsEnabled)
+                {
+                    var updates = new MachineReadingUpdated[machines.Length];
+                    for (int index = 0; index < machines.Length; index++)
+                    {
+                        updates[index] = MachineReadingUpdated.From(latestReadings[index], machines[index]);
+                    }
+
+                    await realtime.PublishAsync(updates, stoppingToken);
                 }
             }
         }

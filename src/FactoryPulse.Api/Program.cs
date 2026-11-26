@@ -1,5 +1,7 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using FactoryPulse.Api.Persistence;
+using FactoryPulse.Api.Realtime;
 using FactoryPulse.Api.Simulation;
 using FactoryPulse.Application.Monitoring;
 using FactoryPulse.Application.Status;
@@ -8,12 +10,10 @@ using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<MachineStatus>(allowIntegerValues: false));
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<AlarmSeverity>(allowIntegerValues: false));
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter<AlarmLifecycleState>(allowIntegerValues: false));
-});
+builder.Services.AddControllers().AddJsonOptions(options => ConfigureMonitoringJson(options.JsonSerializerOptions));
+builder.Services.AddSignalR().AddJsonProtocol(options => ConfigureMonitoringJson(options.PayloadSerializerOptions));
+builder.Services.AddOptions<RealtimeMonitoringOptions>().BindConfiguration(RealtimeMonitoringOptions.SectionName).ValidateOnStart();
+builder.Services.AddSingleton<IRealtimeMonitoringPublisher, SignalRMonitoringPublisher>();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
@@ -53,7 +53,15 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 app.MapHealthChecks("/health");
+app.MapFactoryPulseMonitoringHub();
 
 app.Run();
+
+static void ConfigureMonitoringJson(JsonSerializerOptions options)
+{
+    options.Converters.Add(new JsonStringEnumConverter<MachineStatus>(allowIntegerValues: false));
+    options.Converters.Add(new JsonStringEnumConverter<AlarmSeverity>(allowIntegerValues: false));
+    options.Converters.Add(new JsonStringEnumConverter<AlarmLifecycleState>(allowIntegerValues: false));
+}
 
 public partial class Program;
