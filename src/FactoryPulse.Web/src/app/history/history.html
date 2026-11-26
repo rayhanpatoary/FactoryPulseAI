@@ -1,0 +1,49 @@
+<header class="page-heading">
+  <div>
+    <h1>{{ 'nav.history' | translate }}</h1>
+    <p>{{ 'history.subtitle' | translate }}</p>
+  </div>
+</header>
+<form
+  class="surface panel filters"
+  (submit)="$event.preventDefault(); apply(machine.value, from.value, to.value)"
+>
+  <label class="field"
+    ><span>{{ 'machine.code' | translate }}</span
+    ><select #machine required>
+      <option value="">{{ 'history.select' | translate }}</option>
+      @for (entry of store.machines(); track entry.id) {
+        <option [value]="entry.id">{{ entry.machineCode }}</option>
+      }
+    </select></label
+  >
+  <label class="field"
+    ><span>{{ 'history.from' | translate }}</span
+    ><input #from type="datetime-local"
+  /></label>
+  <label class="field"
+    ><span>{{ 'history.to' | translate }}</span
+    ><input #to type="datetime-local"
+  /></label>
+  <button matButton="filled" type="submit">{{ 'actions.apply' | translate }}</button>
+</form>
+@if (invalidRange()) {
+  <p role="alert" class="notice error">{{ 'history.invalidRange' | translate }}</p>
+}
+@let page = result();
+@if (!query()) {
+  <p>{{ 'history.select' | translate }}</p>
+} @else if (page === null) {
+  <p role="status">{{ 'common.loading' | translate }}</p>
+} @else if (typeof page === 'string') {
+  <p role="alert" class="notice error">{{ page | translate }}</p>
+} @else {
+  <section class="surface panel">
+    @if (!page.items.length) {
+      <p>{{ 'history.empty' | translate }}</p>
+    } @else {
+      <fp-readings-table [readings]="page.items" />
+    }
+    <fp-pagination [page]="page.page" [hasMore]="page.hasMore" (navigate)="move($event)" />
+  </section>
+}

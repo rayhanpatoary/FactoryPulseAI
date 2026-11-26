@@ -1,0 +1,65 @@
+<header class="page-heading">
+  <div>
+    <h1>{{ 'nav.alarms' | translate }}</h1>
+    <p>{{ 'alarm.subtitle' | translate }}</p>
+  </div>
+  <button matButton="outlined" type="button" (click)="reload()">
+    {{ 'actions.refresh' | translate }}
+  </button>
+</header>
+<form
+  class="surface panel filters"
+  (submit)="$event.preventDefault(); apply(machine.value, severity.value, state.value)"
+>
+  <label class="field"
+    ><span>{{ 'machine.code' | translate }}</span
+    ><select #machine>
+      <option value="">{{ 'alarm.allMachines' | translate }}</option>
+      @for (entry of store.machines(); track entry.id) {
+        <option [value]="entry.id">{{ entry.machineCode }}</option>
+      }
+    </select></label
+  >
+  <label class="field"
+    ><span>{{ 'alarm.severity' | translate }}</span
+    ><select #severity>
+      <option value="">{{ 'alarm.allSeverities' | translate }}</option>
+      @for (entry of severities; track entry) {
+        <option [value]="entry">{{ 'severity.' + entry | translate }}</option>
+      }
+    </select></label
+  >
+  <label class="field"
+    ><span>{{ 'alarm.state' | translate }}</span
+    ><select #state>
+      <option value="">{{ 'alarm.allStates' | translate }}</option>
+      <option value="true">{{ 'alarm.active' | translate }}</option>
+      <option value="false">{{ 'alarm.resolved' | translate }}</option>
+    </select></label
+  >
+  <button matButton="filled" type="submit">{{ 'actions.apply' | translate }}</button>
+</form>
+@if (writeError(); as failure) {
+  <p role="alert" class="notice error">{{ failure | translate }}</p>
+}
+@let page = result();
+@if (page === null) {
+  <p role="status">{{ 'common.loading' | translate }}</p>
+} @else if (typeof page === 'string') {
+  <p role="alert" class="notice error">{{ page | translate }}</p>
+} @else {
+  <section class="surface panel">
+    @if (!page.items.length) {
+      <p>{{ 'alarm.empty' | translate }}</p>
+    } @else {
+      <fp-alarm-table
+        [alarms]="page.items"
+        [machines]="store.machines()"
+        [allowAcknowledgement]="config.acknowledgementEnabled()"
+        [pending]="pending()"
+        (acknowledged)="acknowledge($event)"
+      />
+    }
+    <fp-pagination [page]="page.page" [hasMore]="page.hasMore" (navigate)="move($event)" />
+  </section>
+}

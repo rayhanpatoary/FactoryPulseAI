@@ -27,6 +27,8 @@ export class App {
   protected readonly navigation = [
     { path: '/', label: 'nav.dashboard', icon: '▦' },
     { path: '/machines', label: 'nav.machines', icon: '▤' },
+    { path: '/alarms', label: 'nav.alarms', icon: '△' },
+    { path: '/history', label: 'nav.history', icon: '◷' },
     { path: '/settings', label: 'nav.settings', icon: '⚙' },
   ];
 }

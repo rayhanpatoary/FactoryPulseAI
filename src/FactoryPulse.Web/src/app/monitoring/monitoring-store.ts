@@ -23,6 +23,7 @@ export class MonitoringStore {
   private readonly api = inject(MonitoringApi);
   private readonly realtime = inject(MonitoringRealtime);
   private readonly reload = new Subject<void>();
+  private readonly reloadAlarms = new Subject<void>();
   private readonly catalog = signal<Machine[]>([]);
   private readonly known = computed(() => new Set(this.catalog().map((machine) => machine.id)));
   private readonly live = signal<ReadonlyMap<string, LiveReading>>(new Map());
@@ -95,7 +96,7 @@ export class MonitoringStore {
         this.loading.set(false);
       });
 
-    merge(refresh, this.realtime.alarms)
+    merge(refresh, this.reloadAlarms, this.realtime.alarms)
       .pipe(
         switchMap(() =>
           this.api.activeSummary().pipe(
@@ -118,6 +119,10 @@ export class MonitoringStore {
 
   refresh() {
     this.reload.next();
+  }
+
+  refreshAlarms() {
+    this.reloadAlarms.next();
   }
 
   private accept(sample: LiveReading) {

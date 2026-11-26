@@ -18,6 +18,11 @@ const routes: Routes = [
     loadComponent: () => import('./app/machines/machine-detail').then((module) => module.MachineDetail),
   },
   { path: 'machines', loadComponent: dashboard, data: { catalogOnly: true } },
+  { path: 'alarms', loadComponent: () => import('./app/alarms/alarms').then((module) => module.Alarms) },
+  {
+    path: 'history',
+    loadComponent: () => import('./app/history/history').then((module) => module.History),
+  },
   { path: 'settings', loadComponent: () => import('./app/settings').then((module) => module.Settings) },
   { path: '**', redirectTo: '' },
 ];
