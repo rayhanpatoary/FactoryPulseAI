@@ -1,0 +1,46 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+      - run: dotnet restore FactoryPulseAI.slnx
+      - run: dotnet build FactoryPulseAI.slnx --no-restore
+      - run: dotnet test --solution FactoryPulseAI.slnx --no-build --coverlet
+      - run: dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/FactoryPulse.Web
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: src/FactoryPulse.Web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run build
+      - run: npm test
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: npm run e2e
