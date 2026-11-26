@@ -28,7 +28,10 @@ public sealed class AuthenticationController(
         AntiforgeryTokenSet tokens = antiforgery.GetAndStoreTokens(HttpContext);
         Response.Cookies.Append(IdentityRegistration.RequestTokenCookie, tokens.RequestToken!, new CookieOptions
         {
-            Secure = true, SameSite = SameSiteMode.Strict, Path = "/", IsEssential = true
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Path = "/",
+            IsEssential = true
         });
         return NoContent();
     }
@@ -82,7 +85,9 @@ public sealed class AuthenticationController(
         await signIn.SignOutAsync();
         Response.Cookies.Delete(IdentityRegistration.RequestTokenCookie, new CookieOptions
         {
-            Secure = true, Path = "/", SameSite = SameSiteMode.Strict
+            Secure = true,
+            Path = "/",
+            SameSite = SameSiteMode.Strict
         });
         return NoContent();
     }
