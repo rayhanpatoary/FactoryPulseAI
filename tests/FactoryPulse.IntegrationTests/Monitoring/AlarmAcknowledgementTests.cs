@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using FactoryPulse.Api.Security;
 using Xunit;
 
 namespace FactoryPulse.IntegrationTests.Monitoring;
@@ -10,11 +11,11 @@ public sealed class AlarmAcknowledgementTests(MachineApiFixture fixture) : IClas
     [Theory]
     [InlineData("Production")]
     [InlineData("Staging")]
-    public async Task ProtectedEnvironmentsRejectAcknowledgement(string environment)
+    public async Task ViewersCannotAcknowledgeAlarms(string environment)
     {
         CancellationToken token = TestContext.Current.CancellationToken;
-        using HttpClient client = fixture.CreateClient(environment);
-        using HttpResponseMessage response = await client.PostAsync(Route(fixture.WarningAlarmId), null, token);
+        using HttpClient client = fixture.CreateClient(environment, role: MonitoringAccess.Viewer);
+        using HttpResponseMessage response = await client.PostProtectedAsync(Route(fixture.WarningAlarmId), token);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -28,8 +29,8 @@ public sealed class AlarmAcknowledgementTests(MachineApiFixture fixture) : IClas
         using HttpClient firstClient = fixture.CreateClient("Testing", new FixedClock(now));
         using HttpClient laterClient = fixture.CreateClient("Testing", new FixedClock(now.AddMinutes(2)));
 
-        using HttpResponseMessage firstResponse = await firstClient.PostAsync(Route(fixture.WarningAlarmId), null, token);
-        using HttpResponseMessage laterResponse = await laterClient.PostAsync(Route(fixture.WarningAlarmId), null, token);
+        using HttpResponseMessage firstResponse = await firstClient.PostProtectedAsync(Route(fixture.WarningAlarmId), token);
+        using HttpResponseMessage laterResponse = await laterClient.PostProtectedAsync(Route(fixture.WarningAlarmId), token);
         Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
         Assert.Equal(HttpStatusCode.OK, laterResponse.StatusCode);
 
@@ -52,7 +53,7 @@ public sealed class AlarmAcknowledgementTests(MachineApiFixture fixture) : IClas
     {
         CancellationToken token = TestContext.Current.CancellationToken;
         using HttpClient client = fixture.CreateClient("Development", new FixedClock(MachineApiFixture.StartUtc));
-        using HttpResponseMessage response = await client.PostAsync(Route(fixture.ResolvedAlarmId), null, token);
+        using HttpResponseMessage response = await client.PostProtectedAsync(Route(fixture.ResolvedAlarmId), token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         JsonElement alarm = await response.Content.ReadFromJsonAsync<JsonElement>(token);
@@ -67,8 +68,8 @@ public sealed class AlarmAcknowledgementTests(MachineApiFixture fixture) : IClas
     [InlineData("9223372036854775807", HttpStatusCode.NotFound)]
     public async Task InvalidAndMissingIdsReturnProblemDetails(string id, HttpStatusCode statusCode)
     {
-        using HttpResponseMessage response = await fixture.Client.PostAsync(
-            $"/api/alarms/{id}/acknowledge", null, TestContext.Current.CancellationToken);
+        using HttpResponseMessage response = await fixture.Client.PostProtectedAsync(
+            $"/api/alarms/{id}/acknowledge", TestContext.Current.CancellationToken);
 
         Assert.Equal(statusCode, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);

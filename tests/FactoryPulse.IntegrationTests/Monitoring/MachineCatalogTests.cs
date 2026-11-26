@@ -83,8 +83,11 @@ public sealed class MachineCatalogTests(MachineApiFixture fixture) : IClassFixtu
         await using WebApplicationFactory<Program> host = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Production")
             .ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(
                 new Dictionary<string, string?> { ["Simulation:Enabled"] = "false" }))
-            .ConfigureTestServices(services => services.AddScoped<FactoryPulseDbContext>(_ =>
-                throw new InvalidOperationException(InternalMessage))));
+            .ConfigureTestServices(services =>
+            {
+                services.AddMonitoringTestSession();
+                services.AddScoped<FactoryPulseDbContext>(_ => throw new InvalidOperationException(InternalMessage));
+            }));
         using HttpClient client = host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
         CancellationToken token = TestContext.Current.CancellationToken;
         using HttpResponseMessage response = await client.GetAsync("/api/machines", token);

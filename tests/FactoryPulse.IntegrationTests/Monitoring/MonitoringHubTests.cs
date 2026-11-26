@@ -152,7 +152,7 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
         await host.Services.GetRequiredService<ConnectionProbe>().Connected.Task.WaitAsync(token);
 
         string route = $"/api/alarms/{alarm.Id}/acknowledge";
-        using HttpResponseMessage first = await api.PostAsync(route, null, token);
+        using HttpResponseMessage first = await api.PostProtectedAsync(route, token);
         first.EnsureSuccessStatusCode();
         (string name, JsonElement payload) = await messages.Reader.ReadAsync(token);
         Assert.Equal("AlarmAcknowledged", name);
@@ -163,7 +163,7 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
         JsonElement current = await api.GetFromJsonAsync<JsonElement>("/api/alarms/active", token);
         Assert.Equal("ActiveAcknowledged", Assert.Single(current.GetProperty("items").EnumerateArray()).GetProperty("state").GetString());
 
-        using HttpResponseMessage repeat = await api.PostAsync(route, null, token);
+        using HttpResponseMessage repeat = await api.PostProtectedAsync(route, token);
         repeat.EnsureSuccessStatusCode();
         // A later broadcast marks the end of the repeat request without a timed absence assertion.
         IRealtimeMonitoringPublisher publisher = host.Services.GetRequiredService<IRealtimeMonitoringPublisher>();
@@ -186,6 +186,7 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
             }))
             .ConfigureTestServices(services =>
             {
+                services.AddMonitoringTestSession();
                 services.AddScoped(_ => database.CreateContext());
                 services.AddSingleton<TimeProvider>(clock);
                 services.AddSingleton<IMachineDataSource>(source);

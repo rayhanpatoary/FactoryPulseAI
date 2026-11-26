@@ -1,13 +1,15 @@
 using System.ComponentModel.DataAnnotations;
 using FactoryPulse.Api.Monitoring;
+using FactoryPulse.Api.Security;
 using FactoryPulse.Application.Monitoring;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FactoryPulse.Api.Controllers;
 
 [ApiController]
 [Route("api/alarms")]
-public sealed class AlarmsController(IAlarmManagement alarms, IMachineQueries machines, IHostEnvironment environment) : ControllerBase
+public sealed class AlarmsController(IAlarmManagement alarms, IMachineQueries machines) : ControllerBase
 {
     [HttpGet]
     public Task<AlarmPage> List([FromQuery] Guid? machineId, [FromQuery] AlarmListRequest request, CancellationToken cancellationToken) =>
@@ -32,6 +34,8 @@ public sealed class AlarmsController(IAlarmManagement alarms, IMachineQueries ma
     }
 
     [HttpPost("{id}/acknowledge")]
+    [Authorize(Policy = MonitoringAccess.Acknowledge)]
+    [ValidateAntiForgeryToken]
     [ProducesResponseType<AlarmDetails>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
@@ -39,12 +43,6 @@ public sealed class AlarmsController(IAlarmManagement alarms, IMachineQueries ma
     public async Task<ActionResult<AlarmDetails>> Acknowledge(
         [Range(typeof(long), "1", "9223372036854775807")] long id, CancellationToken cancellationToken)
     {
-        if (!environment.IsDevelopment() && !environment.IsEnvironment("Testing"))
-        {
-            return Problem(title: "Alarm acknowledgement is available only in Development and Testing.",
-                statusCode: StatusCodes.Status403Forbidden);
-        }
-
         AlarmDetails? alarm = await alarms.AcknowledgeAsync(id, cancellationToken);
         return alarm is null ? Problem(title: "Alarm not found.", statusCode: StatusCodes.Status404NotFound) : alarm;
     }
