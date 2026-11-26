@@ -1,0 +1,127 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "machines": "Machines",
+    "alarms": "Alarms",
+    "history": "History",
+    "settings": "Settings",
+    "main": "Main navigation",
+    "skip": "Skip to content"
+  },
+  "connection": {
+    "connecting": "Connecting",
+    "live": "Live connection",
+    "reconnecting": "Reconnecting",
+    "unavailable": "Live updates unavailable",
+    "disconnected": "Disconnected"
+  },
+  "actions": {
+    "refresh": "Refresh",
+    "retry": "Try again",
+    "reconnect": "Reconnect",
+    "apply": "Apply filters",
+    "previous": "Previous",
+    "next": "Next",
+    "acknowledge": "Acknowledge",
+    "back": "All machines"
+  },
+  "common": {
+    "loading": "Loading monitoring data…",
+    "simulation": "Simulation",
+    "lastUpdate": "Last updated",
+    "unknown": "—",
+    "page": "Page {{page}}"
+  },
+  "dashboard": {
+    "subtitle": "Machine status and live telemetry",
+    "total": "Total machines",
+    "running": "Running",
+    "stopped": "Idle or stopped",
+    "warnings": "Machines with warnings",
+    "active": "Active alarms",
+    "overview": "Machine overview",
+    "empty": "No machines are registered.",
+    "emptyDetail": "Machine cards appear when the monitoring API has registered machines."
+  },
+  "machine": {
+    "status": "Status",
+    "code": "Machine",
+    "name": "Name",
+    "location": "Location",
+    "type": "Type",
+    "recent": "Recent measurements",
+    "alarms": "Related alarms",
+    "noReading": "No measurements recorded.",
+    "noAlarms": "No alarms recorded.",
+    "trends": "Telemetry trends",
+    "chartHint": "Recent values are also available in the measurement table.",
+    "unknown": "Unknown machine"
+  },
+  "measure": {
+    "temperature": "Temperature",
+    "vibration": "Vibration",
+    "rpm": "Speed",
+    "torque": "Torque",
+    "wear": "Tool wear",
+    "time": "Time"
+  },
+  "status": {
+    "Running": "Running",
+    "Idle": "Idle",
+    "Offline": "Offline",
+    "Faulted": "Faulted"
+  },
+  "severity": {
+    "Information": "Information",
+    "Warning": "Warning",
+    "Critical": "Critical"
+  },
+  "alarmState": {
+    "ActiveUnacknowledged": "Unacknowledged",
+    "ActiveAcknowledged": "Acknowledged",
+    "Resolved": "Resolved"
+  },
+  "alarmCode": {
+    "TEMPERATURE_WARNING": "High temperature",
+    "TEMPERATURE_CRITICAL": "Critical temperature",
+    "VIBRATION_WARNING": "Excessive vibration"
+  },
+  "alarm": {
+    "subtitle": "Review active alarms and alarm history",
+    "allMachines": "All machines",
+    "allSeverities": "All severities",
+    "allStates": "All alarms",
+    "active": "Active",
+    "resolved": "Resolved",
+    "state": "Alarm state",
+    "severity": "Severity",
+    "event": "Alarm",
+    "opened": "Opened",
+    "acknowledged": "Acknowledged",
+    "resolvedAt": "Resolved at",
+    "empty": "No alarms match these filters.",
+    "action": "Action"
+  },
+  "history": {
+    "subtitle": "Browse measurements stored by the monitoring API",
+    "select": "Select a machine",
+    "from": "From (local time)",
+    "to": "Before (local time)",
+    "invalidRange": "The start time must be before the end time.",
+    "empty": "No measurements match these filters."
+  },
+  "settings": {
+    "subtitle": "Display and connection preferences",
+    "language": "Language",
+    "languageHelp": "The language preference is saved on this device.",
+    "mode": "Operating mode",
+    "readOnly": "Alarm acknowledgement is disabled for this web deployment.",
+    "ackEnabled": "Alarm acknowledgement is enabled for this web deployment."
+  },
+  "errors": {
+    "offline": "The monitoring API is unreachable.",
+    "load": "Monitoring data could not be loaded.",
+    "missing": "The requested record is unavailable.",
+    "forbidden": "This deployment does not allow alarm acknowledgement."
+  }
+}

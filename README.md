@@ -14,6 +14,7 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 - **Machine monitoring API.** Read the machine catalog, status counts, latest readings, and paginated history with UTC date filters. [Endpoints and examples](docs/architecture/MONITORING-API.md)
 - **Alarm management.** Configurable temperature and vibration rules detect and resolve abnormal conditions. REST endpoints expose active alarms and history. [Alarm settings and endpoints](docs/architecture/ALARMS.md)
 - **Real-time monitoring.** SignalR streams live readings and committed alarm updates in Development and Testing. [Hub and event contracts](docs/architecture/REALTIME.md)
+- **Web dashboard.** The English and German Angular client shows machine status, telemetry charts, alarms, and paginated measurement history. [Web setup and requirements](docs/architecture/WEB.md)
 - **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations.
 
 ## Architecture and technology
@@ -58,6 +59,14 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 | `https://localhost:7161/api/status` | Instance name, simulation mode, and UTC observation time |
 | `https://localhost:7161/openapi/v1.json` | OpenAPI document in Development |
 
+With the API running, open a second terminal and start the dashboard using Node.js 24. Open `http://localhost:4200`. [Dashboard commands and proxy configuration](docs/architecture/WEB.md)
+
+```powershell
+Set-Location src/FactoryPulse.Web
+npm ci
+npm start
+```
+
 ## Configuration and security
 
 ASP.NET Core loads defaults from `appsettings.json` and validates typed settings at startup. Override `Database__Path` to select a writable SQLite file, `ApplicationStatus__InstanceName` to name the instance, and `AllowedHosts` to configure accepted host names. Use .NET User Secrets for development credentials and protected environment variables or a secret provider for deployments. Keep credentials out of version control.
@@ -85,14 +94,16 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Read-only machine catalog, status summary, and telemetry API | Implemented |
 | Temperature and vibration alarms, lifecycle, and REST queries | Implemented |
 | SignalR stream for telemetry and alarm updates | Implemented for Development and Testing |
-| Operator interfaces | Planned |
+| Angular monitoring dashboard with English and German localization | Implemented |
+| GitHub Actions validation for the API and web client | Configured |
+| WPF operator interface | Planned |
 | Quality inspection, predictive analytics, and deployment automation | Planned |
 
 ## Roadmap
 
 - **Telemetry and diagnostics.** Evaluate OPC UA for read-only data acquisition and support additional sources through plugins.
-- **Operator interfaces.** Build an Angular web interface and a WPF desktop client for machine status, trends, and alarms.
+- **Operator interfaces.** Build a WPF desktop client for machine status, trends, and alarms.
 - **Inspection and analytics.** Add camera-based quality inspection with OpenCV and evaluate predictive maintenance with ML.NET.
-- **Deployment and operations.** Add Docker and Docker Compose, automate verification with GitHub Actions, and evaluate Kubernetes for orchestration.
+- **Deployment and operations.** Add Docker and Docker Compose, and evaluate Kubernetes for orchestration.
 
 [Initial architecture decision](docs/adr/0001-initial-architecture.md)

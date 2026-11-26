@@ -1,0 +1,61 @@
+<div class="table-wrap">
+  <table [attr.aria-label]="'nav.alarms' | translate">
+    <thead>
+      <tr>
+        @if (showMachine()) {
+          <th scope="col">{{ 'machine.code' | translate }}</th>
+        }
+        <th scope="col">{{ 'alarm.event' | translate }}</th>
+        <th scope="col">{{ 'alarm.severity' | translate }}</th>
+        <th scope="col">{{ 'alarm.state' | translate }}</th>
+        <th scope="col">{{ 'alarm.opened' | translate }}</th>
+        <th scope="col">{{ 'alarm.acknowledged' | translate }}</th>
+        <th scope="col">{{ 'alarm.resolvedAt' | translate }}</th>
+        @if (allowAcknowledgement()) {
+          <th scope="col">{{ 'alarm.action' | translate }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (alarm of alarms(); track alarm.id) {
+        <tr>
+          @if (showMachine()) {
+            <td>
+              <a [routerLink]="['/machines', alarm.machineId]">{{ machineCode(alarm.machineId) }}</a>
+            </td>
+          }
+          <td>
+            @if (alarmLabel(alarm.alarmCode); as label) {
+              <strong>{{ label | translate }}</strong><br />
+            }
+            <code>{{ alarm.alarmCode }}</code>
+          </td>
+          <td>
+            <span class="status" [attr.data-tone]="alarm.severity"
+              ><span class="status-symbol" aria-hidden="true"></span
+              >{{ 'severity.' + alarm.severity | translate }}</span
+            >
+          </td>
+          <td>{{ 'alarmState.' + alarm.state | translate }}</td>
+          <td>{{ alarm.createdAtUtc | date: 'medium' : undefined : locale() }}</td>
+          <td>{{ (alarm.acknowledgedAtUtc | date: 'medium' : undefined : locale()) ?? '—' }}</td>
+          <td>{{ (alarm.resolvedAtUtc | date: 'medium' : undefined : locale()) ?? '—' }}</td>
+          @if (allowAcknowledgement()) {
+            <td>
+              @if (!alarm.acknowledgedAtUtc) {
+                <button
+                  matButton="outlined"
+                  type="button"
+                  [disabled]="pending() !== null"
+                  (click)="acknowledged.emit(alarm.id)"
+                >
+                  {{ 'actions.acknowledge' | translate }}
+                </button>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

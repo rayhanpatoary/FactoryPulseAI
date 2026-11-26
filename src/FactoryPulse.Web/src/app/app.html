@@ -1,0 +1,60 @@
+<a class="skip-link" href="#main-content">{{ 'nav.skip' | translate }}</a>
+<div class="shell">
+  <aside class="sidebar">
+    <a routerLink="/" class="brand"
+      ><span class="brand-icon" aria-hidden="true">∿</span><span>FactoryPulse AI</span></a
+    >
+    <nav [attr.aria-label]="'nav.main' | translate">
+      @for (link of navigation; track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="selected"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+        >
+          <span class="nav-icon" aria-hidden="true">{{ link.icon }}</span>{{ link.label | translate }}
+        </a>
+      }
+    </nav>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      @if (store.mode() === 'simulation') {
+        <span class="mode">{{ 'common.simulation' | translate }}</span>
+      }
+      <div class="topbar-controls">
+        <span class="status connection" [attr.data-tone]="realtime.state()" role="status"
+          ><span class="status-symbol" aria-hidden="true"></span
+          >{{ 'connection.' + realtime.state() | translate }}</span
+        >
+        @if (realtime.state() === 'unavailable' || realtime.state() === 'disconnected') {
+          <button matButton type="button" (click)="realtime.connect()">
+            {{ 'actions.reconnect' | translate }}
+          </button>
+        }
+        <select
+          class="language-switch"
+          [attr.aria-label]="'settings.language' | translate"
+          [value]="language.code()"
+          (change)="language.set($any($event.target).value === 'de' ? 'de' : 'en')"
+        >
+          <option value="en" lang="en">EN</option>
+          <option value="de" lang="de">DE</option>
+        </select>
+      </div>
+    </header>
+    @if (store.loading()) {
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
+    }
+    <main id="main-content" tabindex="-1">
+      @if (store.error(); as error) {
+        <div class="notice error" role="alert">
+          <span>{{ error | translate }}</span><button matButton type="button" (click)="store.refresh()">
+            {{ 'actions.retry' | translate }}
+          </button>
+        </div>
+      }
+      <router-outlet />
+    </main>
+  </div>
+</div>
