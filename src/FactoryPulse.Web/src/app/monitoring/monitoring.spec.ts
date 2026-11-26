@@ -99,6 +99,7 @@ describe('monitoring', () => {
   it('merges newer live readings while initial and reconnect snapshots load', () => {
     const { http, handlers, reconnected } = configure();
     const store = TestBed.inject(MonitoringStore);
+    store.start();
     expect(store.loading()).toBe(true);
     handlers.get('MachineReadingUpdated')?.(reading);
     flushSnapshot(http, [machine], {
@@ -117,12 +118,18 @@ describe('monitoring', () => {
       temperature: 60,
     });
     expect(store.machines()[0].reading?.temperature).toBe(60);
+    store.stop();
+    expect(store.machines()).toEqual([]);
+    expect(store.lastUpdate()).toBeNull();
+    handlers.get('MachineReadingUpdated')?.(reading);
+    expect(store.lastUpdate()).toBeNull();
     http.verify();
   });
 
   it('reports an unreachable backend and supports retry to an empty catalogue', () => {
     const { http } = configure();
     const store = TestBed.inject(MonitoringStore);
+    store.start();
     http.expectOne('/api/status').flush(null, { status: 503, statusText: 'Unavailable' });
     expect(http.expectOne('/api/machines').cancelled).toBe(true);
     http

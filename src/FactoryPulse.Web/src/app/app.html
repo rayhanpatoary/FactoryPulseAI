@@ -23,6 +23,17 @@
         <span class="mode">{{ 'common.simulation' | translate }}</span>
       }
       <div class="topbar-controls">
+        @if (session.user(); as user) {
+          <div class="session-user">
+            <strong>{{ user.userName }}</strong>
+            @for (role of user.roles; track role) {
+              <small>{{ 'auth.role.' + role | translate }}</small>
+            }
+          </div>
+          <button matButton type="button" [disabled]="logoutPending()" (click)="logout()">
+            {{ 'auth.signOut' | translate }}
+          </button>
+        }
         <span class="status connection" [attr.data-tone]="realtime.state()" role="status"
           ><span class="status-symbol" aria-hidden="true"></span
           >{{ 'connection.' + realtime.state() | translate }}</span
@@ -47,6 +58,9 @@
       <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
     }
     <main id="main-content" tabindex="-1">
+      @if (logoutError()) {
+        <p class="notice error" role="alert">{{ 'auth.error' | translate }}</p>
+      }
       @if (store.error(); as error) {
         <div class="notice error" role="alert">
           <span>{{ error | translate }}</span><button matButton type="button" (click)="store.refresh()">

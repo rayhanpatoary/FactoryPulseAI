@@ -26,6 +26,22 @@ html {
 body {
   margin: 0;
 }
+.sign-in {
+  display: grid;
+  align-content: center;
+  width: min(100%, 32rem);
+  min-height: 100dvh;
+}
+.sign-in form,
+.session-user {
+  display: grid;
+}
+.session-user {
+  overflow-wrap: anywhere;
+}
+.session-user small {
+  color: var(--muted);
+}
 a {
   color: var(--accent);
 }

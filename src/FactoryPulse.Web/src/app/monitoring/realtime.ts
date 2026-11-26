@@ -28,6 +28,8 @@ export class MonitoringRealtime {
   private readonly recoveries = new Subject<void>();
   private attempted = false;
   private destroyed = false;
+  private revision = 0;
+  private stopping?: Promise<void>;
 
   readonly state = this.connectionState.asReadonly();
   readonly readings = this.readingEvents.asObservable();
@@ -45,7 +47,9 @@ export class MonitoringRealtime {
     this.hub.on('AlarmAcknowledged', (payload: MonitoringEvents['AlarmAcknowledged']) =>
       this.alarmEvents.next({ name: 'AlarmAcknowledged', payload }),
     );
-    this.hub.onreconnecting(() => this.connectionState.set('reconnecting'));
+    this.hub.onreconnecting(() => {
+      if (this.attempted) this.connectionState.set('reconnecting');
+    });
     this.hub.onreconnected(() => this.connected(true));
     this.hub.onclose(() => this.connectionState.set('disconnected'));
 
@@ -62,25 +66,42 @@ export class MonitoringRealtime {
       this.readingEvents.complete();
       this.alarmEvents.complete();
       this.recoveries.complete();
-      void this.hub.stop().catch(() => undefined);
+      void this.disconnect();
     });
   }
 
   async connect() {
-    if (this.destroyed || !['disconnected', 'unavailable'].includes(this.state())) return;
+    const revision = this.revision;
+    if (this.stopping) await this.stopping;
+    if (
+      this.destroyed ||
+      revision !== this.revision ||
+      !['disconnected', 'unavailable'].includes(this.state())
+    )
+      return;
     const retry = this.attempted;
     this.attempted = true;
     this.connectionState.set('connecting');
     try {
       await this.hub.start();
-      this.connected(retry);
+      if (revision === this.revision) this.connected(retry);
     } catch {
-      if (!this.destroyed) this.connectionState.set('unavailable');
+      if (!this.destroyed && revision === this.revision) this.connectionState.set('unavailable');
     }
   }
 
+  disconnect() {
+    this.revision++;
+    this.attempted = false;
+    this.connectionState.set('disconnected');
+    return (this.stopping ??= this.hub
+      .stop()
+      .catch(() => undefined)
+      .finally(() => (this.stopping = undefined)));
+  }
+
   private connected(recovered: boolean) {
-    if (this.destroyed) return;
+    if (this.destroyed || !this.attempted) return;
     this.connectionState.set('live');
     if (recovered) this.recoveries.next();
   }

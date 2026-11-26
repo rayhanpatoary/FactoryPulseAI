@@ -15,8 +15,7 @@
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
             "styles": ["src/styles.scss"],
-            "outputPath": "dist",
-            "assets": [{ "glob": "**/*", "input": "public" }]
+            "outputPath": "dist"
           },
           "configurations": {
             "production": {
