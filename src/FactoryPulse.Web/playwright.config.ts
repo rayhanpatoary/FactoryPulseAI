@@ -9,7 +9,7 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4200', trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'npm run start',
+    command: 'npm run start -- --prebundle=false',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000,

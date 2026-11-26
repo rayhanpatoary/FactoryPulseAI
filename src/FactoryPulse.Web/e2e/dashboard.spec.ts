@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 
 const machine = {
   id: '33f27d0e-36a8-4e14-874a-a93352ea5082',
@@ -27,11 +28,19 @@ const alarm = {
   resolvedAtUtc: null,
 };
 
-async function fixture(page: Page, options: { empty?: boolean; allowAcknowledgement?: boolean } = {}) {
+async function fixture(
+  page: Page,
+  options: { empty?: boolean; allowAcknowledgement?: boolean; anonymous?: boolean } = {},
+) {
+  let authenticated = !options.anonymous;
+  const user = {
+    userName: 'test-user',
+    roles: [options.allowAcknowledgement ? 'Operator' : 'Viewer'],
+    canAcknowledge: options.allowAcknowledgement === true,
+    expiresAtUtc: null,
+  };
+  const password = randomUUID();
   await page.route('**/hubs/monitoring/negotiate?*', (route) => route.fulfill({ status: 404 }));
-  await page.route('**/web-config.json', (route) =>
-    route.fulfill({ json: { allowAlarmAcknowledgement: options.allowAcknowledgement ?? false } }),
-  );
   await page.route('**/api/**', (route) => {
     const url = new URL(route.request().url());
     const pageNo = Number(url.searchParams.get('page') ?? 1);
@@ -42,6 +51,16 @@ async function fixture(page: Page, options: { empty?: boolean; allowAcknowledgem
       items,
     });
     switch (url.pathname) {
+      case '/api/auth/me':
+        return authenticated ? route.fulfill({ json: user }) : route.fulfill({ status: 401 });
+      case '/api/auth/csrf':
+        return route.fulfill({ status: 204 });
+      case '/api/auth/login':
+        authenticated = route.request().postDataJSON()?.password === password;
+        return authenticated ? route.fulfill({ json: user }) : route.fulfill({ status: 401 });
+      case '/api/auth/logout':
+        authenticated = false;
+        return route.fulfill({ status: 204 });
       case '/api/status':
         return route.fulfill({ json: { operatingMode: 'simulation' } });
       case '/api/machines':
@@ -64,6 +83,7 @@ async function fixture(page: Page, options: { empty?: boolean; allowAcknowledgem
         return route.fulfill({ status: 404 });
     }
   });
+  return password;
 }
 
 test('opens the dashboard, machine catalogue and telemetry charts', async ({ page }) => {
@@ -144,4 +164,63 @@ test('keeps offline and empty states usable on a narrow viewport', async ({ page
   await nav.getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+});
+
+test('guards monitoring, validates sign-in, then stops SignalR and clears navigation on logout', async ({
+  page,
+}) => {
+  const password = await fixture(page, { anonymous: true });
+  let negotiateCount = 0;
+  let notifyClosed!: () => void;
+  const closed = new Promise<void>((resolve) => {
+    notifyClosed = resolve;
+  });
+  await page.route('**/hubs/monitoring/negotiate?*', (route) => {
+    negotiateCount++;
+    return route.fulfill({
+      json: {
+        negotiateVersion: 1,
+        connectionId: 'fixture',
+        connectionToken: 'fixture',
+        availableTransports: [{ transport: 'WebSockets', transferFormats: ['Text'] }],
+      },
+    });
+  });
+  await page.routeWebSocket('**/hubs/monitoring?*', (socket) => {
+    socket.onMessage((message) => {
+      if (String(message).includes('"protocol":"json"')) socket.send('{}\x1e');
+    });
+    socket.onClose(notifyClosed);
+  });
+
+  await page.goto('/alarms');
+  await expect(page).toHaveURL(/\/login$/);
+  expect(negotiateCount).toBe(0);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('This field is required.').first()).toBeVisible();
+  await page.getByLabel('Username').fill('test-user');
+  await page.getByLabel('Password').fill(randomUUID());
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('alert')).toContainText('Sign-in was declined.');
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  await expect(page.getByText('Live connection', { exact: true })).toBeVisible();
+  expect(negotiateCount).toBe(1);
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await closed;
+  await expect(page.getByRole('navigation')).toHaveCount(0);
+});
+
+test('returns an expired session to the localized login screen', async ({ page }) => {
+  await fixture(page);
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Language' }).selectOption('de');
+  await page.route('**/api/status', (route) => route.fulfill({ status: 401 }));
+  await page.getByRole('button', { name: 'Aktualisieren' }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('button', { name: 'Anmelden' })).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('Ihre Sitzung ist abgelaufen.');
 });
