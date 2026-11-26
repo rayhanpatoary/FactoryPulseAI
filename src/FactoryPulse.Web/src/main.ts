@@ -13,6 +13,10 @@ registerLocaleData(en);
 const dashboard = () => import('./app/dashboard/dashboard').then((module) => module.Dashboard);
 const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: dashboard },
+  {
+    path: 'machines/:id',
+    loadComponent: () => import('./app/machines/machine-detail').then((module) => module.MachineDetail),
+  },
   { path: 'machines', loadComponent: dashboard, data: { catalogOnly: true } },
   { path: 'settings', loadComponent: () => import('./app/settings').then((module) => module.Settings) },
   { path: '**', redirectTo: '' },

@@ -1,0 +1,56 @@
+<a matButton routerLink="/machines">{{ 'actions.back' | translate }}</a>
+@let state = view();
+@if (state === null) {
+  <p role="status">{{ 'common.loading' | translate }}</p>
+} @else if (typeof state === 'string') {
+  <div role="alert" class="notice error">
+    <span>{{ state | translate }}</span
+    ><button matButton type="button" (click)="retry.next()">{{ 'actions.retry' | translate }}</button>
+  </div>
+} @else {
+  @let machine = state.machine;
+  @let status = currentStatus() ?? machine.status;
+  <header class="page-heading">
+    <div>
+      <h1>{{ machine.machineCode }}</h1>
+      <p>{{ machine.name }} · {{ machine.machineType }} · {{ machine.location }}</p>
+    </div>
+    <span class="status" [attr.data-tone]="status"
+      ><span class="status-symbol" aria-hidden="true"></span>{{ 'status.' + status | translate }}</span
+    >
+  </header>
+  @if (machine.description) {
+    <p class="surface panel">{{ machine.description }}</p>
+  }
+  <section class="surface panel">
+    <h2>{{ 'common.lastUpdate' | translate }}</h2>
+    @if (latest().length) {
+      <fp-readings-table [readings]="latest()" />
+    } @else {
+      <p>{{ 'machine.noReading' | translate }}</p>
+    }
+  </section>
+  @if (samples().length) {
+    <div class="section-heading">
+      <h2>{{ 'machine.trends' | translate }}</h2>
+      <span>{{ 'machine.chartHint' | translate }}</span>
+    </div>
+    <div class="chart-grid">
+      <fp-telemetry-chart metric="temperature" unit="°C" color="#155abc" [readings]="samples()" />
+      <fp-telemetry-chart metric="vibration" unit="mm/s" color="#1c7659" [readings]="samples()" />
+      <fp-telemetry-chart metric="rpm" unit="rpm" color="#9b5724" [readings]="samples()" />
+    </div>
+    <section class="surface panel">
+      <h2>{{ 'machine.recent' | translate }}</h2>
+      <fp-readings-table [readings]="samples().slice(-10).reverse()" />
+    </section>
+  }
+  <section class="surface panel">
+    <h2>{{ 'machine.alarms' | translate }}</h2>
+    @if (state.alarms.length) {
+      <fp-alarm-table [alarms]="state.alarms" [showMachine]="false" />
+    } @else {
+      <p>{{ 'machine.noAlarms' | translate }}</p>
+    }
+  </section>
+}

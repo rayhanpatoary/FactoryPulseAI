@@ -209,6 +209,14 @@ p {
 .chart-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
+.telemetry-chart {
+  min-width: 0;
+}
+.telemetry-chart > div {
+  position: relative;
+  height: 12rem;
+  margin-top: 0.75rem;
+}
 .metric {
   padding: 1.1rem;
   display: grid;
