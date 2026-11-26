@@ -54,11 +54,11 @@ internal sealed class AuthenticationFixture : IAsyncDisposable
         AllowAutoRedirect = false
     });
 
-    internal async Task CreateUserAsync(string role, CancellationToken token)
+    internal async Task CreateUserAsync(string role, CancellationToken token, string userName = "test-user")
     {
         await using AsyncServiceScope scope = Host.Services.CreateAsyncScope();
         var provisioner = scope.ServiceProvider.GetRequiredService<AccountProvisioning>();
-        IdentityResult result = await provisioner.CreateAsync("test-user", role, Password, token);
+        IdentityResult result = await provisioner.CreateAsync(userName, role, Password, token);
         Assert.True(result.Succeeded);
     }
 
