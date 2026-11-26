@@ -6,7 +6,10 @@ export default defineConfig({
   fullyParallel: true,
   workers: process.env['CI'] ? 2 : undefined,
   reporter: 'list',
-  use: { baseURL: 'http://localhost:4200', trace: 'retain-on-failure' },
+  use: {
+    baseURL: 'http://localhost:4200',
+    trace: process.env['FACTORYPULSE_WEB_LIVE'] ? 'off' : 'retain-on-failure',
+  },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'npm run start -- --prebundle=false',

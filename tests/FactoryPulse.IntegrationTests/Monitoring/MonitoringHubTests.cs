@@ -21,6 +21,11 @@ using Xunit;
 
 namespace FactoryPulse.IntegrationTests.Monitoring;
 
+[CollectionDefinition(nameof(SimulatorWireTests), DisableParallelization = true)]
+public sealed class SimulatorWireTests;
+
+// These virtual-clock cases still exercise the publisher's real transport deadline.
+[Collection(nameof(SimulatorWireTests))]
 public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
     : IClassFixture<WebApplicationFactory<Program>>
 {

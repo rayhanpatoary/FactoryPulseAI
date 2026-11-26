@@ -12,8 +12,8 @@ public static class MonitoringAccess
     public static void AddMonitoringPolicies(this IServiceCollection services)
     {
         services.AddAuthorizationBuilder()
-            .AddPolicy(Read, policy => policy.RequireRole(Viewer, Operator, Administrator))
-            .AddPolicy(Acknowledge, policy => policy.RequireRole(Operator, Administrator))
-            .AddPolicy(Administer, policy => policy.RequireRole(Administrator));
+            .AddPolicy(Read, policy => policy.RequireAuthenticatedUser().RequireRole(Viewer, Operator, Administrator))
+            .AddPolicy(Acknowledge, policy => policy.RequireAuthenticatedUser().RequireRole(Operator, Administrator))
+            .AddPolicy(Administer, policy => policy.RequireAuthenticatedUser().RequireRole(Administrator));
     }
 }
