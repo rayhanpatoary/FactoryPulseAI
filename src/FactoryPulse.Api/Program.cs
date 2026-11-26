@@ -9,7 +9,8 @@ using FactoryPulse.Application.Status;
 using FactoryPulse.Domain.Monitoring;
 using Microsoft.Extensions.Options;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+bool provisionUser = args is ["provision-user", ..];
+WebApplicationBuilder builder = WebApplication.CreateBuilder(provisionUser ? [] : args);
 
 builder.Services.AddControllersWithViews().AddJsonOptions(options => ConfigureMonitoringJson(options.JsonSerializerOptions));
 builder.Services.AddSignalR().AddJsonProtocol(options => ConfigureMonitoringJson(options.PayloadSerializerOptions));
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<IRealtimeMonitoringPublisher, SignalRMonitoringPub
 builder.Services.AddProblemDetails();
 builder.Services.AddMonitoringIdentity();
 builder.Services.AddSingleton<ActiveMonitoringSessions>();
+builder.Services.AddScoped<AccountProvisioning>();
 builder.Services.AddHealthChecks();
 builder.AddFactoryPulseDatabase();
 builder.AddFactoryPulseSimulation();
@@ -45,6 +47,13 @@ builder.Services.AddSingleton(services => new ApplicationStatusService(
     services.GetRequiredService<TimeProvider>()));
 
 WebApplication app = builder.Build();
+
+if (provisionUser)
+{
+    Environment.ExitCode = await AccountProvisioning.RunAsync(app.Services, args);
+    await app.DisposeAsync();
+    return;
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
