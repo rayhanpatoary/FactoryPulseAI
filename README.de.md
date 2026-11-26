@@ -14,6 +14,7 @@ FactoryPulse AI soll Messwerte, Maschinenzustände und Alarme für die Zustands�
 - **API für die Maschinenüberwachung.** Maschinenbestand, Anzahl je Status, aktuelle Messwerte und den paginierten Messwertverlauf mit UTC-Zeitfiltern abrufen. [Endpunkte und Beispiele](docs/architecture/MONITORING-API.md)
 - **Alarmverwaltung.** Konfigurierbare Regeln für Temperatur und Schwingung erkennen auffällige Messwerte und beenden Alarme nach Rückkehr in den Normalbereich. Die REST-API liefert aktive Alarme und den Verlauf. [Alarmeinstellungen und Endpunkte](docs/architecture/ALARMS.md)
 - **Echtzeitüberwachung.** SignalR überträgt aktuelle Messwerte und gespeicherte Alarmänderungen in den Umgebungen Development und Testing. [Hub und Ereignisformate](docs/architecture/REALTIME.md)
+- **Web-Dashboard.** Die Angular-Oberfläche zeigt Maschinenzustände, Messwertdiagramme, Alarme und den paginierten Messwertverlauf auf Deutsch und Englisch. [Einrichtung und Voraussetzungen](docs/architecture/WEB.md)
 - **Datenpersistenz mit SQLite.** EF Core speichert Maschinen, Messwerte und Alarme mit indizierten Beziehungen und expliziten Schemamigrationen.
 
 ## Softwarearchitektur und Technologien
@@ -58,6 +59,14 @@ dotnet run --project src/FactoryPulse.Api --launch-profile "FactoryPulse.Api (HT
 | `https://localhost:7161/api/status` | Instanzname, Simulationsmodus und UTC-Zeitstempel der Abfrage |
 | `https://localhost:7161/openapi/v1.json` | OpenAPI-Dokument in der Entwicklungsumgebung |
 
+Starten Sie bei laufender API das Dashboard in einem zweiten Terminal mit Node.js 24. Öffnen Sie `http://localhost:4200`. [Dashboard-Befehle und Proxy-Konfiguration](docs/architecture/WEB.md)
+
+```powershell
+Set-Location src/FactoryPulse.Web
+npm ci
+npm start
+```
+
 ## Konfiguration und Sicherheit
 
 ASP.NET Core lädt Standardwerte aus `appsettings.json` und validiert typisierte Einstellungen beim Start. Mit `Database__Path` wählen Sie eine beschreibbare SQLite-Datei, mit `ApplicationStatus__InstanceName` den Instanznamen und mit `AllowedHosts` die zulässigen Hostnamen. Verwenden Sie für Zugangsdaten in der Entwicklung .NET User Secrets und bei der Bereitstellung geschützte Umgebungsvariablen oder einen Secret-Provider. Zugangsdaten gehören nicht in die Versionsverwaltung.
@@ -85,14 +94,16 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Schreibgeschützte REST-API für Maschinenbestand, Statusübersicht und Messwerte | Implementiert |
 | Temperatur- und Schwingungsalarme, Alarmlebenszyklus und REST-Abfragen | Implementiert |
 | SignalR-Stream für Messwerte und Alarmänderungen | Für Development und Testing implementiert |
-| Bedienoberflächen | Geplant |
+| Angular-Dashboard für die Maschinenüberwachung auf Deutsch und Englisch | Implementiert |
+| Prüfungen für API und Web-Client mit GitHub Actions | Konfiguriert |
+| WPF-Bedienoberfläche | Geplant |
 | Qualitätsprüfung, vorausschauende Analysen und automatisierte Bereitstellung | Geplant |
 
 ## Roadmap
 
 - **Telemetrie und Diagnose.** OPC UA für den lesenden Zugriff prüfen und weitere Datenquellen über Plugins anbinden.
-- **Bedienoberflächen.** Eine Angular-Weboberfläche und einen WPF-Desktop-Client für Maschinenzustände, Trends und Alarme entwickeln.
+- **Bedienoberflächen.** Einen WPF-Desktop-Client für Maschinenzustände, Trends und Alarme entwickeln.
 - **Qualitätsprüfung und Analysen.** Kamerabasierte Qualitätsprüfung mit OpenCV ergänzen und vorausschauende Wartung mit ML.NET evaluieren.
-- **Bereitstellung und Betrieb.** Docker und Docker Compose ergänzen, Prüfungen mit GitHub Actions automatisieren und Kubernetes für die Orchestrierung evaluieren.
+- **Bereitstellung und Betrieb.** Docker und Docker Compose ergänzen und Kubernetes für die Orchestrierung evaluieren.
 
 [Grundlegende Architekturentscheidung](docs/adr/0001-initial-architecture.md)
