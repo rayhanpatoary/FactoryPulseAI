@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FactoryPulse.Infrastructure.Persistence;
 
-public sealed class AlarmManagement(FactoryPulseDbContext database, TimeProvider clock) : IAlarmManagement
+public sealed class AlarmManagement(
+    FactoryPulseDbContext database, TimeProvider clock, IRealtimeMonitoringPublisher realtime) : IAlarmManagement
 {
     private static readonly Expression<Func<MachineAlarm, AlarmDetails>> Project =
         alarm => new AlarmDetails(alarm.Id, alarm.MachineId, alarm.AlarmCode, alarm.Message, alarm.Severity,
@@ -58,11 +59,19 @@ public sealed class AlarmManagement(FactoryPulseDbContext database, TimeProvider
     public async Task<AlarmDetails?> AcknowledgeAsync(long id, CancellationToken cancellationToken)
     {
         DateTime utcNow = clock.GetUtcNow().UtcDateTime;
-        await database.MachineAlarms.Where(alarm => alarm.Id == id && alarm.AcknowledgedAtUtc == null)
+        int updated = await database.MachineAlarms.Where(alarm => alarm.Id == id && alarm.AcknowledgedAtUtc == null)
             .ExecuteUpdateAsync(setters => setters.SetProperty(alarm => alarm.AcknowledgedAtUtc,
                 alarm => (DateTime?)(alarm.CreatedAtUtc > utcNow ? alarm.CreatedAtUtc : utcNow)), cancellationToken);
 
-        return await database.MachineAlarms.AsNoTracking().Where(alarm => alarm.Id == id)
+        AlarmDetails? alarm = await database.MachineAlarms.AsNoTracking().Where(alarm => alarm.Id == id)
             .Select(Project).SingleOrDefaultAsync(cancellationToken);
+        if (updated == 1 && realtime.IsEnabled && alarm is { AcknowledgedAtUtc: DateTime acknowledgedAt })
+        {
+            // Only the request that changed the row can publish the committed acknowledgement.
+            await realtime.PublishAsync([new AlarmAcknowledged(id, alarm.MachineId, acknowledgedAt, IsAcknowledged: true)],
+                cancellationToken);
+        }
+
+        return alarm;
     }
 }

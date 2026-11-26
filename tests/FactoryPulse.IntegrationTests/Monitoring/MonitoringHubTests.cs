@@ -126,6 +126,53 @@ public sealed class MonitoringHubTests(WebApplicationFactory<Program> factory)
     private static IDisposable Subscribe(HubConnection connection, ChannelWriter<(string Name, JsonElement Payload)> writer, string name) =>
         connection.On<JsonElement>(name, payload => writer.TryWrite((name, payload)));
 
+    [Fact]
+    public async Task FirstRestAcknowledgementPublishesOnceWithSimulationDisabled()
+    {
+        using var timeout = CreateTimeout();
+        CancellationToken token = timeout.Token;
+        await using SqliteTestDatabase database = await SqliteTestDatabase.OpenAsync(token);
+        var machine = new Machine("CNC-001", "Mill", "CNC", "Test", DateTime.UnixEpoch);
+        var alarm = new MachineAlarm(machine.Id, AlarmCodes.VibrationWarning, "Vibration", AlarmSeverity.Warning, DateTime.UnixEpoch);
+        await using (FactoryPulseDbContext writer = database.CreateContext())
+        {
+            writer.Machines.Add(machine);
+            writer.MachineAlarms.Add(alarm);
+            await writer.SaveChangesAsync(token);
+        }
+
+        var clock = new ManualSimulationClock();
+        await using WebApplicationFactory<Program> host = CreateHost(database, clock, new ControlledSource(clock), simulationEnabled: false);
+        using HttpClient api = host.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        await using HubConnection connection = CreateConnection(host);
+        var messages = Channel.CreateUnbounded<(string Name, JsonElement Payload)>();
+        using IDisposable acknowledgementSubscription = Subscribe(connection, messages.Writer, "AlarmAcknowledged");
+        using IDisposable readingSubscription = Subscribe(connection, messages.Writer, "MachineReadingUpdated");
+        await connection.StartAsync(token);
+        await host.Services.GetRequiredService<ConnectionProbe>().Connected.Task.WaitAsync(token);
+
+        string route = $"/api/alarms/{alarm.Id}/acknowledge";
+        using HttpResponseMessage first = await api.PostAsync(route, null, token);
+        first.EnsureSuccessStatusCode();
+        (string name, JsonElement payload) = await messages.Reader.ReadAsync(token);
+        Assert.Equal("AlarmAcknowledged", name);
+        Assert.Equal(alarm.Id, payload.GetProperty("alarmId").GetInt64());
+        Assert.Equal(machine.Id, payload.GetProperty("machineId").GetGuid());
+        Assert.Equal("1970-01-01T00:00:00Z", payload.GetProperty("acknowledgedAtUtc").GetString());
+        Assert.True(payload.GetProperty("isAcknowledged").GetBoolean());
+        JsonElement current = await api.GetFromJsonAsync<JsonElement>("/api/alarms/active", token);
+        Assert.Equal("ActiveAcknowledged", Assert.Single(current.GetProperty("items").EnumerateArray()).GetProperty("state").GetString());
+
+        using HttpResponseMessage repeat = await api.PostAsync(route, null, token);
+        repeat.EnsureSuccessStatusCode();
+        // A later broadcast marks the end of the repeat request without a timed absence assertion.
+        IRealtimeMonitoringPublisher publisher = host.Services.GetRequiredService<IRealtimeMonitoringPublisher>();
+        await publisher.PublishAsync([new MachineReadingUpdated(machine.Id, machine.MachineCode, DateTime.UnixEpoch,
+            45, 1.25, 2400, 18, 0.1, machine.Status)], token);
+        Assert.Equal("MachineReadingUpdated", (await messages.Reader.ReadAsync(token)).Name);
+        Assert.False(clock.TimerStarted.Task.IsCompleted);
+    }
+
     private WebApplicationFactory<Program> CreateHost(
         SqliteTestDatabase database, ManualSimulationClock clock, ControlledSource source, bool simulationEnabled) =>
         factory.WithWebHostBuilder(builder => builder.UseEnvironment("Testing")
