@@ -49,8 +49,7 @@
     <main id="main-content" tabindex="-1">
       @if (store.error(); as error) {
         <div class="notice error" role="alert">
-          <span>{{ error | translate }}</span
-          ><button matButton type="button" (click)="store.refresh()">
+          <span>{{ error | translate }}</span><button matButton type="button" (click)="store.refresh()">
             {{ 'actions.retry' | translate }}
           </button>
         </div>

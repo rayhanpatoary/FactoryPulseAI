@@ -11,24 +11,29 @@
 @if (!catalogOnly) {
   <div class="metric-grid" [attr.aria-label]="'dashboard.overview' | translate">
     <div class="surface metric">
-      <span>{{ 'dashboard.total' | translate }}</span
-      ><strong>{{ store.lastUpdate() ? store.counts().total : '—' }}</strong>
+      <span>{{ 'dashboard.total' | translate }}</span><strong>{{
+        store.lastUpdate() ? store.counts().total : '—'
+      }}</strong>
     </div>
     <div class="surface metric">
-      <span>{{ 'dashboard.running' | translate }}</span
-      ><strong class="text-positive">{{ store.lastUpdate() ? store.counts().running : '—' }}</strong>
+      <span>{{ 'dashboard.running' | translate }}</span><strong class="text-positive">{{
+        store.lastUpdate() ? store.counts().running : '—'
+      }}</strong>
     </div>
     <div class="surface metric">
-      <span>{{ 'dashboard.stopped' | translate }}</span
-      ><strong>{{ store.lastUpdate() ? store.counts().stopped : '—' }}</strong>
+      <span>{{ 'dashboard.stopped' | translate }}</span><strong>{{
+        store.lastUpdate() ? store.counts().stopped : '—'
+      }}</strong>
     </div>
     <div class="surface metric">
-      <span>{{ 'dashboard.warnings' | translate }}</span
-      ><strong class="text-warning">{{ store.alarmCounts()?.warnings ?? '—' }}</strong>
+      <span>{{ 'dashboard.warnings' | translate }}</span><strong class="text-warning">{{
+        store.alarmCounts()?.warnings ?? '—'
+      }}</strong>
     </div>
     <div class="surface metric">
-      <span>{{ 'dashboard.active' | translate }}</span
-      ><strong>{{ store.alarmCounts()?.active ?? '—' }}</strong>
+      <span>{{ 'dashboard.active' | translate }}</span><strong>{{
+        store.alarmCounts()?.active ?? '—'
+      }}</strong>
     </div>
   </div>
 }
@@ -56,8 +61,7 @@
     <a class="surface machine-card" [routerLink]="['/machines', machine.id]">
       <div class="machine-heading">
         <div>
-          <strong>{{ machine.machineCode }}</strong
-          ><span>{{ machine.name }}</span>
+          <strong>{{ machine.machineCode }}</strong><span>{{ machine.name }}</span>
         </div>
         <span class="status" [attr.data-tone]="machine.status"
           ><span class="status-symbol" aria-hidden="true"></span

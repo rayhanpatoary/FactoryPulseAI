@@ -4,8 +4,9 @@
   <p role="status">{{ 'common.loading' | translate }}</p>
 } @else if (typeof state === 'string') {
   <div role="alert" class="notice error">
-    <span>{{ state | translate }}</span
-    ><button matButton type="button" (click)="retry.next()">{{ 'actions.retry' | translate }}</button>
+    <span>{{ state | translate }}</span><button matButton type="button" (click)="retry.next()">
+      {{ 'actions.retry' | translate }}
+    </button>
   </div>
 } @else {
   @let machine = state.machine;
