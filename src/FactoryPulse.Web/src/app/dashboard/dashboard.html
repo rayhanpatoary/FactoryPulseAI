@@ -1,0 +1,90 @@
+<header class="page-heading">
+  <div>
+    <h1>{{ (catalogOnly ? 'nav.machines' : 'nav.dashboard') | translate }}</h1>
+    <p>{{ 'dashboard.subtitle' | translate }}</p>
+  </div>
+  <button matButton="outlined" type="button" (click)="store.refresh()">
+    {{ 'actions.refresh' | translate }}
+  </button>
+</header>
+
+@if (!catalogOnly) {
+  <div class="metric-grid" [attr.aria-label]="'dashboard.overview' | translate">
+    <div class="surface metric">
+      <span>{{ 'dashboard.total' | translate }}</span
+      ><strong>{{ store.lastUpdate() ? store.counts().total : '—' }}</strong>
+    </div>
+    <div class="surface metric">
+      <span>{{ 'dashboard.running' | translate }}</span
+      ><strong class="text-positive">{{ store.lastUpdate() ? store.counts().running : '—' }}</strong>
+    </div>
+    <div class="surface metric">
+      <span>{{ 'dashboard.stopped' | translate }}</span
+      ><strong>{{ store.lastUpdate() ? store.counts().stopped : '—' }}</strong>
+    </div>
+    <div class="surface metric">
+      <span>{{ 'dashboard.warnings' | translate }}</span
+      ><strong class="text-warning">{{ store.alarmCounts()?.warnings ?? '—' }}</strong>
+    </div>
+    <div class="surface metric">
+      <span>{{ 'dashboard.active' | translate }}</span
+      ><strong>{{ store.alarmCounts()?.active ?? '—' }}</strong>
+    </div>
+  </div>
+}
+
+@if (store.alarmError() && !catalogOnly && !store.error()) {
+  <p class="notice" role="status">{{ store.alarmError() | translate }}</p>
+}
+<div class="section-heading">
+  <h2>{{ 'dashboard.overview' | translate }}</h2>
+  @if (store.lastUpdate(); as updated) {
+    <span
+      >{{ 'common.lastUpdate' | translate }}
+      <time>{{ updated | date: 'mediumTime' : undefined : locale() }}</time></span
+    >
+  }
+</div>
+@if (!store.loading() && !store.error() && !store.machines().length) {
+  <div class="surface empty">
+    <strong>{{ 'dashboard.empty' | translate }}</strong>
+    <p>{{ 'dashboard.emptyDetail' | translate }}</p>
+  </div>
+}
+<div class="machine-grid">
+  @for (machine of store.machines(); track machine.id) {
+    <a class="surface machine-card" [routerLink]="['/machines', machine.id]">
+      <div class="machine-heading">
+        <div>
+          <strong>{{ machine.machineCode }}</strong
+          ><span>{{ machine.name }}</span>
+        </div>
+        <span class="status" [attr.data-tone]="machine.status"
+          ><span class="status-symbol" aria-hidden="true"></span
+          >{{ 'status.' + machine.status | translate }}</span
+        >
+      </div>
+      @if (machine.reading; as reading) {
+        <dl class="measure-grid">
+          <div>
+            <dt>{{ 'measure.temperature' | translate }}</dt>
+            <dd>{{ reading.temperature | number: '1.0-1' : locale() }} <small>°C</small></dd>
+          </div>
+          <div>
+            <dt>{{ 'measure.vibration' | translate }}</dt>
+            <dd>{{ reading.vibration | number: '1.0-2' : locale() }} <small>mm/s</small></dd>
+          </div>
+          <div>
+            <dt>{{ 'measure.rpm' | translate }}</dt>
+            <dd>{{ reading.rpm | number: '1.0-0' : locale() }} <small>rpm</small></dd>
+          </div>
+        </dl>
+        <time [attr.datetime]="reading.timestampUtc">{{
+          reading.timestampUtc | date: 'medium' : undefined : locale()
+        }}</time>
+      } @else {
+        <p>{{ 'machine.noReading' | translate }}</p>
+      }
+    </a>
+  }
+</div>

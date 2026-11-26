@@ -1,0 +1,127 @@
+{
+  "nav": {
+    "dashboard": "Übersicht",
+    "machines": "Maschinen",
+    "alarms": "Alarme",
+    "history": "Verlauf",
+    "settings": "Einstellungen",
+    "main": "Hauptnavigation",
+    "skip": "Zum Inhalt springen"
+  },
+  "connection": {
+    "connecting": "Verbindung wird aufgebaut",
+    "live": "Live verbunden",
+    "reconnecting": "Verbindung wird wiederhergestellt",
+    "unavailable": "Live-Daten nicht verfügbar",
+    "disconnected": "Getrennt"
+  },
+  "actions": {
+    "refresh": "Aktualisieren",
+    "retry": "Erneut versuchen",
+    "reconnect": "Erneut verbinden",
+    "apply": "Filter anwenden",
+    "previous": "Zurück",
+    "next": "Weiter",
+    "acknowledge": "Quittieren",
+    "back": "Alle Maschinen"
+  },
+  "common": {
+    "loading": "Überwachungsdaten werden geladen …",
+    "simulation": "Simulation",
+    "lastUpdate": "Zuletzt aktualisiert",
+    "unknown": "—",
+    "page": "Seite {{page}}"
+  },
+  "dashboard": {
+    "subtitle": "Maschinenzustände und Live-Messwerte",
+    "total": "Maschinen gesamt",
+    "running": "In Betrieb",
+    "stopped": "Leerlauf oder Stillstand",
+    "warnings": "Maschinen mit Warnungen",
+    "active": "Aktive Alarme",
+    "overview": "Maschinenübersicht",
+    "empty": "Keine Maschinen registriert.",
+    "emptyDetail": "Hier erscheinen die Maschinen, sobald sie in der Überwachungs-API registriert sind."
+  },
+  "machine": {
+    "status": "Zustand",
+    "code": "Maschine",
+    "name": "Name",
+    "location": "Standort",
+    "type": "Typ",
+    "recent": "Letzte Messwerte",
+    "alarms": "Zugehörige Alarme",
+    "noReading": "Keine Messwerte aufgezeichnet.",
+    "noAlarms": "Keine Alarme aufgezeichnet.",
+    "trends": "Messwertverläufe",
+    "chartHint": "Die letzten Werte stehen auch in der Messwerttabelle.",
+    "unknown": "Unbekannte Maschine"
+  },
+  "measure": {
+    "temperature": "Temperatur",
+    "vibration": "Schwingung",
+    "rpm": "Drehzahl",
+    "torque": "Drehmoment",
+    "wear": "Werkzeugverschleiß",
+    "time": "Zeit"
+  },
+  "status": {
+    "Running": "In Betrieb",
+    "Idle": "Im Leerlauf",
+    "Offline": "Offline",
+    "Faulted": "Störung"
+  },
+  "severity": {
+    "Information": "Information",
+    "Warning": "Warnung",
+    "Critical": "Kritisch"
+  },
+  "alarmState": {
+    "ActiveUnacknowledged": "Nicht quittiert",
+    "ActiveAcknowledged": "Quittiert",
+    "Resolved": "Beendet"
+  },
+  "alarmCode": {
+    "TEMPERATURE_WARNING": "Hohe Temperatur",
+    "TEMPERATURE_CRITICAL": "Kritische Temperatur",
+    "VIBRATION_WARNING": "Übermäßige Schwingung"
+  },
+  "alarm": {
+    "subtitle": "Aktive Alarme und Alarmverlauf prüfen",
+    "allMachines": "Alle Maschinen",
+    "allSeverities": "Alle Schweregrade",
+    "allStates": "Alle Alarme",
+    "active": "Aktiv",
+    "resolved": "Beendet",
+    "state": "Alarmzustand",
+    "severity": "Schweregrad",
+    "event": "Alarm",
+    "opened": "Ausgelöst",
+    "acknowledged": "Quittiert",
+    "resolvedAt": "Beendet am",
+    "empty": "Keine Alarme für diese Filter.",
+    "action": "Aktion"
+  },
+  "history": {
+    "subtitle": "Gespeicherte Messwerte aus der Überwachungs-API abrufen",
+    "select": "Maschine auswählen",
+    "from": "Ab (Ortszeit)",
+    "to": "Vor (Ortszeit)",
+    "invalidRange": "Der Beginn muss vor dem Ende liegen.",
+    "empty": "Keine Messwerte für diese Filter."
+  },
+  "settings": {
+    "subtitle": "Anzeige- und Verbindungseinstellungen",
+    "language": "Sprache",
+    "languageHelp": "Die Spracheinstellung wird auf diesem Gerät gespeichert.",
+    "mode": "Betriebsmodus",
+    "readOnly": "Die Alarmquittierung ist für diese Webbereitstellung deaktiviert.",
+    "ackEnabled": "Die Alarmquittierung ist für diese Webbereitstellung aktiviert."
+  },
+  "errors": {
+    "offline": "Die Überwachungs-API ist nicht erreichbar.",
+    "load": "Die Überwachungsdaten konnten nicht geladen werden.",
+    "missing": "Der angeforderte Datensatz ist nicht verfügbar.",
+    "forbidden": "Diese Bereitstellung erlaubt keine Alarmquittierung."
+  }
+}

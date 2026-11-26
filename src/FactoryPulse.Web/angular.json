@@ -29,7 +29,11 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
-          "options": { "buildTarget": "factorypulse-web:build:development", "host": "localhost" }
+          "options": {
+            "buildTarget": "factorypulse-web:build:development",
+            "host": "localhost",
+            "proxyConfig": "proxy.conf.cjs"
+          }
         },
         "test": {
           "builder": "@angular/build:unit-test",
