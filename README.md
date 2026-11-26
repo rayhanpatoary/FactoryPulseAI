@@ -13,6 +13,7 @@ FactoryPulse AI is designed to bring machine readings, equipment status, and ala
 - **Simulated acquisition.** An opt-in simulator generates repeatable telemetry for three CNC profiles and writes the latest readings to SQLite in batches.
 - **Machine monitoring API.** Read the machine catalog, status counts, latest readings, and paginated history with UTC date filters. [Endpoints and examples](docs/architecture/MONITORING-API.md)
 - **Alarm management.** Configurable temperature and vibration rules detect and resolve abnormal conditions. REST endpoints expose active alarms and history. [Alarm settings and endpoints](docs/architecture/ALARMS.md)
+- **Real-time monitoring.** SignalR streams live readings and committed alarm updates in Development and Testing. [Hub and event contracts](docs/architecture/REALTIME.md)
 - **SQLite persistence.** EF Core stores machine records, readings, and alarms with indexed relationships and explicit schema migrations.
 
 ## Architecture and technology
@@ -83,12 +84,13 @@ dotnet format FactoryPulseAI.slnx --verify-no-changes --no-restore
 | Simulated machine telemetry and batch storage | Implemented |
 | Read-only machine catalog, status summary, and telemetry API | Implemented |
 | Temperature and vibration alarms, lifecycle, and REST queries | Implemented |
-| End-to-end machine monitoring | In progress. Simulated acquisition and REST queries exist. Streaming and operator interfaces are planned. |
+| SignalR stream for telemetry and alarm updates | Implemented for Development and Testing |
+| Operator interfaces | Planned |
 | Quality inspection, predictive analytics, and deployment automation | Planned |
 
 ## Roadmap
 
-- **Telemetry and diagnostics.** Deliver live telemetry with SignalR. Evaluate OPC UA for read-only data acquisition and support additional sources through plugins.
+- **Telemetry and diagnostics.** Evaluate OPC UA for read-only data acquisition and support additional sources through plugins.
 - **Operator interfaces.** Build an Angular web interface and a WPF desktop client for machine status, trends, and alarms.
 - **Inspection and analytics.** Add camera-based quality inspection with OpenCV and evaluate predictive maintenance with ML.NET.
 - **Deployment and operations.** Add Docker and Docker Compose, automate verification with GitHub Actions, and evaluate Kubernetes for orchestration.
