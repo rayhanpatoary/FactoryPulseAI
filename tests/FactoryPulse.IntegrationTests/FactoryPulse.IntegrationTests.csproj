@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.MTP" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <PackageReference Include="xunit.v3" />
     <ProjectReference Include="../../src/FactoryPulse.Api/FactoryPulse.Api.csproj" />
     <ProjectReference Include="../../src/FactoryPulse.Infrastructure/FactoryPulse.Infrastructure.csproj" />
